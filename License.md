@@ -8,4 +8,5 @@ Commercial use, analytical use, academic use, training use, or system integratio
 
 All intellectual property rights remain solely with the author. Any attempt to replicate, emulate, or incorporate The Conductor’s Manifold into other systems without consent is strictly prohibited.
 
-© 2025 Joshua Johosky. All rights reserved.
+
+© 2025 Joshua Johosky, Architect Of The Future. All rights reserved.
