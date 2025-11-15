@@ -1,6 +1,6 @@
 # The Conductor's Manifold
 
-© 2025 [Your Name / Organization]. All Rights Reserved.
+© 2025 Joshua Johosky, Architect of the new Future. All Rights Reserved.
 
 ## Real-Time Interpretation of Complex Systems
 
