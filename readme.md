@@ -6,7 +6,7 @@
 
 The Conductor's Manifold is a novel methodology for observing, interpreting, and understanding complex systems in real-time.
 
-Traditional analysis focuses on past data points. This framework treats systems—such as financial markets, networks, or cultural trends—as living geometric manifolds[cite: 3, 29]. By analyzing curvature, tension, and flow, it provides actionable insights into the current state and structural evolution of the system.
+Traditional analysis focuses on past data points. This framework treats systems—such as financial markets, networks, or cultural trends—as living geometric manifolds. By analyzing curvature, tension, and flow, it provides actionable insights into the current state and structural evolution of the system.
 
 This repository contains the official documentation and access guidelines for the proprietary Conductor's Manifold framework.
 
@@ -43,3 +43,4 @@ Access to live readouts, deep analysis, or targeted insights is managed through 
 
 
 All contents of this repository are protected by copyright. Reproduction, redistribution, or derivative work without explicit authorization is strictly prohibited. See **LICENSE.md** for details.
+
