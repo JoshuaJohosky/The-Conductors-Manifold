@@ -32,6 +32,11 @@ const Dashboard = () => {
     loadPulseData();
   }, [symbol, feed, timescale]);
 
+  // Clear multi-scale data when symbol or feed changes
+  useEffect(() => {
+    setMultiscaleData(null);
+  }, [symbol, feed]);
+
   // Auto-refresh pulse every 30 seconds
   useEffect(() => {
     const interval = setInterval(loadPulseData, 30000);
