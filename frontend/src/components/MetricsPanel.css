@@ -1,0 +1,195 @@
+/* Metrics Panel Styles */
+
+.metrics-panel {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.metrics-panel h2 {
+  font-size: 2rem;
+  color: #00ffff;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.metrics-section {
+  margin-bottom: 3rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.metrics-section h3 {
+  font-size: 1.25rem;
+  color: #00ff00;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metric-box {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  text-align: center;
+}
+
+.metric-box .metric-label {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.metric-box .metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e0e0e0;
+}
+
+.metric-box .metric-value.price {
+  color: #00ff00;
+}
+
+.metric-box .metric-value.positive {
+  color: #00ff00;
+}
+
+.metric-box .metric-value.negative {
+  color: #ff0000;
+}
+
+/* Singularities List */
+.singularities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.singularity-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.singularity-icon {
+  font-size: 1.25rem;
+}
+
+.singularity-item span:not(.singularity-icon) {
+  color: #e0e0e0;
+}
+
+.no-singularities {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+/* Attractors List */
+.attractors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.attractor-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 255, 0, 0.05);
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  border-radius: 8px;
+}
+
+.attractor-icon {
+  font-size: 1.25rem;
+}
+
+.attractor-price {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #00ff00;
+  min-width: 120px;
+}
+
+.attractor-strength-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.attractor-strength-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff00, #00ffff);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.attractor-strength {
+  font-size: 0.875rem;
+  color: #00ff00;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* Charts */
+.metrics-section .recharts-wrapper {
+  margin-top: 1rem;
+}
+
+/* Scrollbar */
+.metrics-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.metrics-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.metrics-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.metrics-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .metrics-panel {
+    padding: 1rem;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .metric-box .metric-value {
+    font-size: 1.25rem;
+  }
+}
