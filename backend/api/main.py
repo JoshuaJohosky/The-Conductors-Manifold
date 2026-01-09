@@ -120,8 +120,11 @@ def metrics_to_dict(metrics: ManifoldMetrics) -> dict:
 
     # Calculate pylon strength from attractor strength (0-100 scale)
     # Higher attractor strength = stronger pylon integrity
-    avg_attractor_strength = sum(s for _, s in metrics.attractors) / len(metrics.attractors) if metrics.attractors else 0
-    pylon_strength = min(100, max(0, int(avg_attractor_strength * 20)))  # Scale to 0-100
+    if metrics.attractors and len(metrics.attractors) > 0:
+        avg_attractor_strength = sum(float(s) for _, s in metrics.attractors) / len(metrics.attractors)
+        pylon_strength = min(100, max(0, int(avg_attractor_strength * 20)))  # Scale to 0-100
+    else:
+        pylon_strength = 0
 
     # Determine phase
     phase = _interpret_state(current_entropy, current_tension)

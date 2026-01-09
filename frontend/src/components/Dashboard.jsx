@@ -14,8 +14,8 @@ import './Dashboard.css';
 
 const Dashboard = () => {
   // Force webpack rebuild - prop fix applied
-  const [symbol, setSymbol] = useState('BTCUSDT');
-  const [feed, setFeed] = useState('binance');
+  const [symbol, setSymbol] = useState('AAPL');
+  const [feed, setFeed] = useState('alphavantage');
   const [timescale, setTimescale] = useState('daily');
   const [manifoldData, setManifoldData] = useState(null);
   const [pulseData, setPulseData] = useState(null);
@@ -100,8 +100,7 @@ const Dashboard = () => {
             onChange={(e) => setFeed(e.target.value)}
             className="select-field"
           >
-            <option value="binance">Binance (Crypto)</option>
-            <option value="alphavantage">Alpha Vantage (Stocks)</option>
+            <option value="alphavantage">Alpha Vantage (US Stocks)</option>
           </select>
         </div>
 
