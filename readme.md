@@ -38,15 +38,28 @@ See **[QUICKSTART.md](QUICKSTART.md)** for detailed instructions.
 
 ## 🎯 What's Implemented
 
+✅ **The Manifold Interpreter** - **PROPRIETARY** methodology with Conductor/Singer perspectives
 ✅ **Core Mathematical Engine** - Curvature, entropy, tension, singularity detection
 ✅ **Multi-Timeframe Analysis** - Monthly, weekly, daily, intraday scales
 ✅ **3D Visualization** - Interactive manifold rendering with Three.js
 ✅ **Real-Time Streaming** - WebSocket-based live updates
 ✅ **Alert System** - Singularity, tension, entropy monitoring
 ✅ **ML Pattern Recognition** - LSTM predictor, anomaly detection
-✅ **REST API** - 6 endpoints for programmatic access
+✅ **REST API** - 7 endpoints including `/interpret` for full readings
 ✅ **Data Feeds** - Binance (crypto) & Alpha Vantage (stocks)
 ✅ **Docker Deployment** - One-command setup
+
+## 🎵 The Conductor's Methodology
+
+This system implements your **proprietary Manifold Interpreter** framework:
+
+- **Geometric Manifold** - Markets as living shapes that evolve under pressure
+- **Musical Composition** - Conductor (macro flow) + Singer (micro geometry) perspectives
+- **Natural Structure** - Elliott Waves as curvature phases, Fibonacci as gravitational basins
+- **Phase Diagnosis** - Impulse sharpening, singularity forming, Ricci flow smoothing
+- **Interpretive Language** - "Curvature tightening," "tension releasing," "psychological heat"
+
+Use `/api/v1/interpret/{symbol}` for complete Conductor's readings.
 
 ---
 

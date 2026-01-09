@@ -19,6 +19,10 @@ from backend.core.manifold_engine import (
     TimeScale,
     ManifoldMetrics
 )
+from backend.core.manifold_interpreter import (
+    ManifoldInterpreter,
+    ManifoldInterpretation
+)
 from backend.services.data_ingestion import (
     DataIngestionService,
     AlphaVantageDataFeed,
@@ -46,6 +50,7 @@ app.add_middleware(
 # Global services
 manifold_engine = ManifoldEngine()
 multiscale_analyzer = MultiScaleAnalyzer()
+manifold_interpreter = ManifoldInterpreter()
 data_service = DataIngestionService()
 
 # WebSocket connection manager
@@ -310,6 +315,83 @@ async def get_singularities(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/interpret/{symbol}")
+async def interpret_manifold(
+    symbol: str,
+    feed: str = "binance",
+    interval: str = "1d",
+    limit: int = 100
+):
+    """
+    **THE CONDUCTOR'S INTERPRETATION** - Proprietary Manifold Reading
+
+    Returns the complete interpretation in the Conductor's language:
+    - Phase diagnosis (impulse, singularity, Ricci flow, etc.)
+    - Conductor perspective (macro flow)
+    - Singer perspective (micro geometry)
+    - Geometric descriptions (curvature, tension, entropy)
+    - Elliott Wave context
+    - Fibonacci attractor analysis
+    - Human-readable market narrative
+
+    This is the core proprietary methodology - interpreting the manifold
+    as a living shape with musical composition dynamics.
+    """
+    try:
+        # Fetch market data
+        market_data = await data_service.fetch_data(feed, symbol, interval, limit)
+
+        if not market_data:
+            raise HTTPException(status_code=404, detail="No data found for symbol")
+
+        # Convert to numpy
+        data_arrays = data_service.to_numpy(market_data)
+
+        # Analyze manifold
+        metrics = manifold_engine.analyze(
+            prices=data_arrays['prices'],
+            timestamps=data_arrays['timestamps'],
+            volume=data_arrays['volume']
+        )
+
+        # THE INTERPRETATION - Proprietary methodology
+        interpretation = manifold_interpreter.interpret(metrics)
+
+        # Convert to JSON-serializable format
+        return {
+            "symbol": symbol,
+            "timestamp": datetime.now().isoformat(),
+            "interpretation": {
+                "phase": interpretation.current_phase.value,
+                "phase_confidence": float(interpretation.phase_confidence),
+                "conductor_reading": interpretation.conductor_reading.value,
+                "singer_reading": interpretation.singer_reading.value,
+                "curvature_state": interpretation.curvature_state,
+                "tension_description": interpretation.tension_description,
+                "entropy_state": interpretation.entropy_state,
+                "wave_position": interpretation.wave_position,
+                "nearest_attractor": {
+                    "price": interpretation.nearest_attractor[0] if interpretation.nearest_attractor else None,
+                    "description": interpretation.nearest_attractor[1] if interpretation.nearest_attractor else None
+                } if interpretation.nearest_attractor else None,
+                "attractor_pull_strength": float(interpretation.attractor_pull_strength),
+                "market_narrative": interpretation.market_narrative,
+                "tension_warning": interpretation.tension_warning
+            },
+            "raw_metrics": {
+                "curvature": float(interpretation.curvature_value),
+                "entropy": float(interpretation.entropy_value),
+                "tension": float(interpretation.tension_value),
+                "price": float(data_arrays['prices'][-1])
+            }
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Interpretation failed: {str(e)}")
 
 
 @app.get("/api/v1/pulse/{symbol}")
