@@ -11,6 +11,7 @@ from typing import List, Dict, Optional
 from datetime import datetime
 import asyncio
 import json
+import os
 import numpy as np
 
 from backend.core.manifold_engine import (
@@ -84,10 +85,11 @@ manager = ConnectionManager()
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup"""
-    # Register data feeds (use environment variables in production)
+    # Register data feeds with API keys from environment
+    alphavantage_key = os.getenv("ALPHAVANTAGE_API_KEY", "demo")
     data_service.register_feed(
         "alphavantage",
-        AlphaVantageDataFeed(api_key="demo")
+        AlphaVantageDataFeed(api_key=alphavantage_key)
     )
     data_service.register_feed(
         "binance",
@@ -97,13 +99,39 @@ async def startup_event():
 
 
 # Helper functions
+def _interpret_state(entropy: float, tension: float) -> str:
+    """Interpret the overall manifold state"""
+    if abs(tension) > 1.5:
+        return "high_tension" if entropy > 5 else "compressed"
+    elif entropy > 5:
+        return "chaotic"
+    elif abs(tension) < 0.5 and entropy < 3:
+        return "stable"
+    else:
+        return "transitional"
+
+
 def metrics_to_dict(metrics: ManifoldMetrics) -> dict:
     """Convert ManifoldMetrics to JSON-serializable dict"""
+    # Calculate current values for UI display
+    current_curvature = float(metrics.curvature[-1]) if len(metrics.curvature) > 0 else 0.0
+    current_entropy = float(metrics.entropy)
+    current_tension = float(metrics.tension[-1]) if len(metrics.tension) > 0 else 0.0
+
+    # Calculate pylon strength from attractor strength (0-100 scale)
+    # Higher attractor strength = stronger pylon integrity
+    avg_attractor_strength = sum(s for _, s in metrics.attractors) / len(metrics.attractors) if metrics.attractors else 0
+    pylon_strength = min(100, max(0, int(avg_attractor_strength * 20)))  # Scale to 0-100
+
+    # Determine phase
+    phase = _interpret_state(current_entropy, current_tension)
+
     return {
         "timestamp": metrics.timestamp.tolist(),
         "prices": metrics.prices.tolist(),
-        "curvature": metrics.curvature.tolist(),
-        "entropy": float(metrics.entropy),
+        "curvature": current_curvature,  # Single value for display
+        "curvature_array": metrics.curvature.tolist(),  # Full array for charts
+        "entropy": current_entropy,
         "local_entropy": metrics.local_entropy.tolist(),
         "singularities": metrics.singularities,
         "attractors": [
@@ -112,7 +140,10 @@ def metrics_to_dict(metrics: ManifoldMetrics) -> dict:
         ],
         "ricci_flow": metrics.ricci_flow.tolist(),
         "tension": metrics.tension.tolist(),
-        "timescale": metrics.timescale.value
+        "tension_value": current_tension,  # Single value for display
+        "timescale": metrics.timescale.value,
+        "pylon_strength": pylon_strength,  # Computed field for UI
+        "phase": phase.upper().replace("_", " ")  # Human readable phase
     }
 
 
@@ -451,23 +482,12 @@ async def get_manifold_pulse(
                     "distance_pct": float(distance_to_attractor / current_price * 100)
                 },
                 "recent_singularities": len(recent_singularities),
-                "manifold_state": self._interpret_state(current_entropy, current_tension)
+                "manifold_state": _interpret_state(current_entropy, current_tension)
             }
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-    def _interpret_state(self, entropy: float, tension: float) -> str:
-        """Interpret the overall manifold state"""
-        if abs(tension) > 1.5:
-            return "high_tension" if entropy > 5 else "compressed"
-        elif entropy > 5:
-            return "chaotic"
-        elif abs(tension) < 0.5 and entropy < 3:
-            return "stable"
-        else:
-            return "transitional"
 
 
 # WebSocket endpoint for real-time updates

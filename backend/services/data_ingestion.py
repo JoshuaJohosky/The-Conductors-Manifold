@@ -298,11 +298,13 @@ class DataIngestionService:
 # Example usage
 async def example_usage():
     """Example of how to use the data ingestion service"""
+    import os
 
     service = DataIngestionService()
 
-    # Register feeds
-    service.register_feed("alphavantage", AlphaVantageDataFeed(api_key="YOUR_KEY"))
+    # Register feeds (get API key from environment)
+    alphavantage_key = os.getenv("ALPHAVANTAGE_API_KEY", "demo")
+    service.register_feed("alphavantage", AlphaVantageDataFeed(api_key=alphavantage_key))
     service.register_feed("binance", BinanceDataFeed())
 
     # Fetch stock data

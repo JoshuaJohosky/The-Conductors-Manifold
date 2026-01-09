@@ -9,7 +9,7 @@ Monitors manifold metrics and triggers alerts for critical events:
 """
 
 import asyncio
-from typing import List, Callable, Dict, Any
+from typing import List, Callable, Dict, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum

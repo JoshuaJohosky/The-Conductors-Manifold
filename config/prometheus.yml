@@ -1,0 +1,45 @@
+# Prometheus Configuration for The Conductor's Manifold
+
+global:
+  scrape_interval: 15s  # How frequently to scrape targets
+  evaluation_interval: 15s  # How frequently to evaluate rules
+
+  # Attach these labels to any time series or alerts
+  external_labels:
+    monitor: 'conductors-manifold'
+    environment: 'production'
+
+# Scrape configurations
+scrape_configs:
+  # Scrape Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Scrape the FastAPI backend
+  - job_name: 'manifold-api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['backend:8000']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Scrape PostgreSQL metrics (if postgres_exporter is added)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+
+  # Scrape Redis metrics (if redis_exporter is added)
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+
+# Alert manager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Rule files (optional)
+# rule_files:
+#   - 'alerts.yml'
