@@ -19,6 +19,8 @@ services:
       - ./backend:/app/backend
       - ./ml:/app/ml
     command: uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - manifold-network
 
   # Frontend
   frontend:
@@ -34,6 +36,8 @@ services:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
     command: npm start
+    networks:
+      - manifold-network
 
   # PostgreSQL with TimescaleDB
   postgres:
@@ -46,6 +50,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - manifold-network
 
   # Redis
   redis:
@@ -54,6 +60,8 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - manifold-network
 
   # Monitoring (Optional)
   prometheus:
@@ -63,6 +71,8 @@ services:
     volumes:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
+    networks:
+      - manifold-network
 
   grafana:
     image: grafana/grafana:latest
@@ -74,9 +84,15 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
+    networks:
+      - manifold-network
 
 volumes:
   postgres_data:
   redis_data:
   prometheus_data:
   grafana_data:
+
+networks:
+  manifold-network:
+    driver: bridge
