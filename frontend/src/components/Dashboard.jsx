@@ -26,10 +26,14 @@ const Dashboard = () => {
 
   const api = useManifoldAPI();
 
-  // Fetch initial data
+  // Fetch initial data - debounced to avoid rate limiting
   useEffect(() => {
-    loadManifoldData();
-    loadPulseData();
+    const timer = setTimeout(() => {
+      loadManifoldData();
+      loadPulseData();
+    }, 800); // Wait 800ms after user stops typing
+
+    return () => clearTimeout(timer);
   }, [symbol, feed, timescale]);
 
   // Clear multi-scale data when symbol or feed changes
@@ -37,10 +41,15 @@ const Dashboard = () => {
     setMultiscaleData(null);
   }, [symbol, feed]);
 
-  // Auto-refresh pulse every 30 seconds
+  // Auto-refresh pulse every 30 seconds (paused while typing)
   useEffect(() => {
-    const interval = setInterval(loadPulseData, 30000);
-    return () => clearInterval(interval);
+    // Only start auto-refresh after initial load (800ms debounce)
+    const startDelay = setTimeout(() => {
+      const interval = setInterval(loadPulseData, 30000);
+      return () => clearInterval(interval);
+    }, 1000);
+
+    return () => clearTimeout(startDelay);
   }, [symbol, feed]);
 
   const loadManifoldData = async () => {
