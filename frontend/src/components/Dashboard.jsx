@@ -76,7 +76,7 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <div className="header-content">
           <h1 className="title">The Conductor's Manifold</h1>
-          <p className="subtitle">Real-Time Geometric Interpretation of Complex Systems</p>
+          <p className="subtitle">Real-Time Geometric Interpretation · Stocks & Crypto</p>
         </div>
       </header>
 
