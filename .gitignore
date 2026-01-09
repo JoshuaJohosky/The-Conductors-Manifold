@@ -7,11 +7,69 @@ Thumbs.db
 .idea/
 *.swp
 
-# Ignore logs or environment files
-*.log
-.env
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
 
-# Ignore everything else except Markdown and this file
-*
-!*.md
-!.gitignore
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+build/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ML Models (large files)
+*.pth
+*.ckpt
+*.h5
+*.pkl
+*.joblib
+
+# Data files (can be large)
+data/
+*.csv
+*.parquet
+
+# Docker
+.dockerignore
+
+# Misc
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
