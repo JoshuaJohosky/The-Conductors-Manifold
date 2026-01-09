@@ -252,7 +252,15 @@ async def analyze_multiscale(
             timestamps=data_arrays['timestamps']
         )
 
-        # Convert all metrics to JSON
+        # Map backend scales to frontend display names
+        scale_mapping = {
+            "intraday": "1H",
+            "daily": "1D",
+            "weekly": "1W",
+            "monthly": "4H"  # Using 4H as intermediate scale
+        }
+
+        # Convert all metrics to JSON with enriched data
         response = {
             "symbol": symbol,
             "feed": feed,
@@ -260,7 +268,41 @@ async def analyze_multiscale(
         }
 
         for scale, metrics in results.items():
-            response["scales"][scale.value] = metrics_to_dict(metrics)
+            scale_key = scale_mapping.get(scale.value, scale.value)
+
+            # Get basic metrics
+            scale_data = metrics_to_dict(metrics)
+
+            # Add attractors if available
+            if hasattr(metrics, 'attractors') and metrics.attractors:
+                scale_data["attractors"] = [
+                    {
+                        "price": float(price),
+                        "strength": float(strength)
+                    }
+                    for price, strength in metrics.attractors[:5]
+                ]
+            else:
+                scale_data["attractors"] = []
+
+            # Add singularities if available
+            if hasattr(metrics, 'singularities') and metrics.singularities:
+                scale_data["singularities"] = [
+                    {
+                        "price": float(price),
+                        "type": sing_type
+                    }
+                    for price, sing_type in metrics.singularities[:5]
+                ]
+            else:
+                scale_data["singularities"] = []
+
+            # Wrap in metrics object for frontend
+            response["scales"][scale_key] = {
+                "metrics": scale_data,
+                "attractors": scale_data["attractors"],
+                "singularities": scale_data["singularities"]
+            }
 
         return response
 

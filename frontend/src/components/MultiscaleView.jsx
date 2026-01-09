@@ -40,10 +40,12 @@ const MultiscaleView = ({ data }) => {
           const scaleData = scales[tf];
           if (!scaleData) return null;
 
-          const metrics = scaleData.metrics || {};
-          const curvature = metrics.curvature || 0;
-          const entropy = metrics.entropy || 0;
-          const phase = metrics.phase || 'UNKNOWN';
+          // Extract metrics - they're nested under "metrics" key
+          const metricsObj = scaleData.metrics || scaleData;
+          const curvature = metricsObj.curvature || 0;
+          const entropy = metricsObj.entropy || 0;
+          const phase = metricsObj.phase || 'UNKNOWN';
+          const pylonStrength = metricsObj.pylon_strength || 0;
 
           return (
             <div key={tf} className="scale-panel">
@@ -57,15 +59,15 @@ const MultiscaleView = ({ data }) => {
               <div className="scale-metrics">
                 <div className="metric-row">
                   <span className="metric-label">Curvature:</span>
-                  <span className="metric-value">{curvature.toFixed(4)}</span>
+                  <span className="metric-value">{typeof curvature === 'number' ? curvature.toFixed(4) : curvature}</span>
                 </div>
                 <div className="metric-row">
                   <span className="metric-label">Entropy:</span>
-                  <span className="metric-value">{entropy.toFixed(2)}</span>
+                  <span className="metric-value">{typeof entropy === 'number' ? entropy.toFixed(2) : entropy}</span>
                 </div>
                 <div className="metric-row">
                   <span className="metric-label">Pylon Strength:</span>
-                  <span className="metric-value">{metrics.pylon_strength || 0}%</span>
+                  <span className="metric-value">{pylonStrength}%</span>
                 </div>
               </div>
 
@@ -100,8 +102,8 @@ const MultiscaleView = ({ data }) => {
         <div className="consistency-grid">
           <div className="consistency-item">
             <strong>Pattern Echo:</strong>
-            <p>Observe how the {scales['1D']?.metrics?.phase || 'phase'} pattern at daily scale
-               echoes in the {scales['1H']?.metrics?.phase || 'micro'} structure at hourly scale.</p>
+            <p>Observe how the {(scales['1D']?.metrics || scales['1D'])?.phase || 'phase'} pattern at daily scale
+               echoes in the {(scales['1H']?.metrics || scales['1H'])?.phase || 'micro'} structure at hourly scale.</p>
           </div>
           <div className="consistency-item">
             <strong>Attractor Alignment:</strong>
