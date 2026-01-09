@@ -107,8 +107,8 @@ const Dashboard = () => {
         <div className="control-group">
           <label>Timescale</label>
           <TimeframeSelector
-            selected={timescale}
-            onChange={setTimescale}
+            current={timescale}
+            onSelect={setTimescale}
           />
         </div>
 
