@@ -286,13 +286,13 @@ async def analyze_multiscale(
                 scale_data["attractors"] = []
 
             # Add singularities if available
-            if hasattr(metrics, 'singularities') and metrics.singularities:
+            if hasattr(metrics, 'singularities') and metrics.singularities and hasattr(metrics, 'prices'):
                 scale_data["singularities"] = [
                     {
-                        "price": float(price),
-                        "type": sing_type
+                        "price": float(metrics.prices[idx]) if idx < len(metrics.prices) else 0.0,
+                        "type": "extreme_tension"
                     }
-                    for price, sing_type in metrics.singularities[:5]
+                    for idx in metrics.singularities[:5]
                 ]
             else:
                 scale_data["singularities"] = []
