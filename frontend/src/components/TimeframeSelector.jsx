@@ -1,29 +1,22 @@
-/**
- * TimeframeSelector - Component for selecting analysis timeframe
- */
-
 import React from 'react';
-import './TimeframeSelector.css';
 
-const TimeframeSelector = ({ selected, onChange }) => {
-  const timeframes = [
-    { value: 'monthly', label: 'Monthly', description: 'Macro folds & long-term impulses' },
-    { value: 'weekly', label: 'Weekly', description: 'Active Ricci flows & structural adjustments' },
-    { value: 'daily', label: 'Daily', description: 'Immediate flow toward attractors' },
-    { value: 'intraday', label: 'Intraday', description: 'Micro-flows & vibrational echoes' }
-  ];
+const TimeframeSelector = ({ current, onSelect }) => {
+  const timeframes = ['1H', '4H', '1D', '1W'];
 
   return (
-    <div className="timeframe-selector">
-      {timeframes.map(tf => (
+    <div className="flex space-x-2 bg-black p-1 rounded border border-gray-800">
+      {timeframes.map((tf) => (
         <button
-          key={tf.value}
-          className={`timeframe-btn ${selected === tf.value ? 'active' : ''}`}
-          onClick={() => onChange(tf.value)}
-          title={tf.description}
+          key={tf}
+          onClick={() => onSelect(tf)}
+          className={`
+            px-3 py-1 text-xs font-mono rounded transition-colors duration-200
+            ${current === tf
+              ? 'bg-green-500 text-black font-bold shadow-[0_0_10px_rgba(34,197,94,0.5)]'
+              : 'text-gray-400 hover:text-green-400 hover:bg-gray-900'}
+          `}
         >
-          <div className="timeframe-label">{tf.label}</div>
-          <div className="timeframe-desc">{tf.description}</div>
+          {tf}
         </button>
       ))}
     </div>
