@@ -13,6 +13,7 @@ import { useManifoldAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
+  // Force webpack rebuild - prop fix applied
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [feed, setFeed] = useState('binance');
   const [timescale, setTimescale] = useState('daily');
