@@ -26,6 +26,7 @@ See **[QUICKSTART.md](QUICKSTART.md)** for detailed instructions.
 
 ### For Users & Traders
 - **[QUICKSTART.md](QUICKSTART.md)** - Get up and running quickly
+- **[INTERPRETER_GUIDE.md](INTERPRETER_GUIDE.md)** - **How to use the Conductor's Interpreter** 🎵
 - **[docs/whitepaper.md](docs/whitepaper.md)** - Conceptual framework
 - **[docs/Glossary.md](docs/Glossary.md)** - Terminology decoder
 
