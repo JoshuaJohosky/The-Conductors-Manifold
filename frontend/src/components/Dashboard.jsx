@@ -13,7 +13,7 @@ import { useManifoldAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  // Force webpack rebuild - prop fix applied
+  // v1.2 - Added CoinGecko crypto support
   const [symbol, setSymbol] = useState('AAPL');
   const [feed, setFeed] = useState('alphavantage');
   const [timescale, setTimescale] = useState('daily');
