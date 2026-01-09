@@ -9,11 +9,12 @@ import ManifoldViewer3D from './ManifoldViewer3D';
 import ManifoldPulse from './ManifoldPulse';
 import MetricsPanel from './MetricsPanel';
 import TimeframeSelector from './TimeframeSelector';
+import MultiscaleView from './MultiscaleView';
 import { useManifoldAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  // v1.2 - Added CoinGecko crypto support
+  // v1.3 - CRYPTO WORKING + MULTISCALE FIXED + 3D UPDATES
   const [symbol, setSymbol] = useState('AAPL');
   const [feed, setFeed] = useState('alphavantage');
   const [timescale, setTimescale] = useState('daily');
@@ -75,8 +76,8 @@ const Dashboard = () => {
       {/* Header */}
       <header className="dashboard-header">
         <div className="header-content">
-          <h1 className="title">The Conductor's Manifold</h1>
-          <p className="subtitle">Real-Time Geometric Interpretation · Stocks & Crypto</p>
+          <h1 className="title">The Conductor's Manifold [v1.3 LIVE]</h1>
+          <p className="subtitle">Real-Time Geometric Interpretation · Stocks & Crypto · Multi-Scale Analysis</p>
         </div>
       </header>
 

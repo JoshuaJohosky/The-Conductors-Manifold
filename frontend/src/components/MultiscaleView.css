@@ -1,0 +1,225 @@
+/* Multi-Scale View Styles */
+
+.multiscale-container {
+  padding: 2rem;
+  color: #e0e0e0;
+}
+
+.multiscale-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
+}
+
+.multiscale-header h2 {
+  font-size: 1.8rem;
+  color: #00ffff;
+  margin-bottom: 0.5rem;
+}
+
+.multiscale-header .subtitle {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.multiscale-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #888;
+}
+
+.multiscale-empty h2 {
+  color: #00ffff;
+  margin-bottom: 1rem;
+}
+
+/* Scales Grid */
+.scales-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.scale-panel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.scale-panel:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(0, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 255, 255, 0.1);
+}
+
+.scale-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scale-header h3 {
+  font-size: 1.2rem;
+  color: #00ffff;
+  margin: 0;
+}
+
+.phase-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.phase-stable {
+  background: rgba(0, 255, 0, 0.2);
+  color: #00ff00;
+  border: 1px solid #00ff00;
+}
+
+.phase-transitional {
+  background: rgba(255, 255, 0, 0.2);
+  color: #ffff00;
+  border: 1px solid #ffff00;
+}
+
+.phase-chaotic {
+  background: rgba(255, 165, 0, 0.2);
+  color: #ffa500;
+  border: 1px solid #ffa500;
+}
+
+.phase-compressed,
+.phase-high-tension,
+.phase-high_tension {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff0000;
+  border: 1px solid #ff0000;
+}
+
+/* Metrics */
+.scale-metrics {
+  margin-bottom: 1rem;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.metric-label {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.metric-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #00ffff;
+  font-family: 'Courier New', monospace;
+}
+
+/* Attractors & Singularities */
+.scale-attractors,
+.scale-singularities {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.attractor-label,
+.singularity-label {
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.attractor-item {
+  font-size: 0.85rem;
+  color: #00ff00;
+  padding: 0.25rem 0;
+  font-family: 'Courier New', monospace;
+}
+
+.singularity-item {
+  font-size: 0.85rem;
+  color: #ff00ff;
+  padding: 0.25rem 0;
+  font-family: 'Courier New', monospace;
+}
+
+/* Fractal Analysis */
+.fractal-analysis {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(255, 0, 255, 0.05));
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.fractal-analysis h3 {
+  color: #00ffff;
+  font-size: 1.4rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.consistency-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.consistency-item {
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border-left: 3px solid #00ffff;
+}
+
+.consistency-item strong {
+  display: block;
+  color: #00ffff;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.consistency-item p {
+  font-size: 0.85rem;
+  color: #b0b0b0;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .scales-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .consistency-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .multiscale-container {
+    padding: 1rem;
+  }
+}
