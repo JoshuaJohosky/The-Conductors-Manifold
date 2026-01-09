@@ -136,7 +136,7 @@ class AlphaVantageDataFeed(DataFeed):
 
 
 class BinanceDataFeed(DataFeed):
-    """Binance API data feed for crypto"""
+    """Binance Global API data feed for crypto (not available in USA)"""
 
     BASE_URL = "https://api.binance.com/api/v3"
     WS_URL = "wss://stream.binance.com:9443/ws"
@@ -187,6 +187,107 @@ class BinanceDataFeed(DataFeed):
                 ))
 
             return market_data
+
+    async def subscribe_realtime(
+        self,
+        symbol: str,
+        callback: Callable[[MarketData], None]
+    ):
+        """
+        Subscribe to real-time kline updates via WebSocket.
+
+        Args:
+            symbol: Trading pair
+            callback: Function to call with new data
+        """
+        import websockets
+
+        stream = f"{symbol.lower()}@kline_1m"
+        uri = f"{self.WS_URL}/{stream}"
+
+        async with websockets.connect(uri) as websocket:
+            async for message in websocket:
+                data = json.loads(message)
+                kline = data.get("k")
+
+                if kline:
+                    market_data = MarketData(
+                        symbol=symbol,
+                        timestamp=datetime.fromtimestamp(kline["t"] / 1000),
+                        open=float(kline["o"]),
+                        high=float(kline["h"]),
+                        low=float(kline["l"]),
+                        close=float(kline["c"]),
+                        volume=float(kline["v"])
+                    )
+
+                    callback(market_data)
+
+
+class BinanceUSDataFeed(DataFeed):
+    """Binance.US API data feed for crypto (US-compliant, high rate limits)"""
+
+    BASE_URL = "https://api.binance.us/api/v3"
+    WS_URL = "wss://stream.binance.us:9443/ws"
+
+    async def fetch_historical(
+        self,
+        symbol: str,
+        interval: str = "1d",
+        limit: int = 100
+    ) -> List[MarketData]:
+        """
+        Fetch historical crypto data from Binance.US.
+
+        Args:
+            symbol: Trading pair (e.g., 'BTCUSDT', 'XRPUSDT')
+            interval: Kline interval ('1m', '5m', '1h', '1d', etc.)
+            limit: Number of candles to fetch
+
+        Returns:
+            List of MarketData objects
+        """
+        await self.connect()
+
+        # Binance.US uses USDT pairs
+        if not symbol.endswith("USDT") and not symbol.endswith("USD"):
+            symbol = f"{symbol}USDT"
+
+        params = {
+            "symbol": symbol.upper(),
+            "interval": interval,
+            "limit": min(limit, 1000)  # Binance.US max limit
+        }
+
+        try:
+            async with self.session.get(
+                f"{self.BASE_URL}/klines",
+                params=params
+            ) as response:
+                if response.status != 200:
+                    text = await response.text()
+                    raise ValueError(f"Binance.US API error: {text}")
+
+                data = await response.json()
+
+                market_data = []
+                for candle in data:
+                    timestamp = datetime.fromtimestamp(candle[0] / 1000)
+
+                    market_data.append(MarketData(
+                        symbol=symbol,
+                        timestamp=timestamp,
+                        open=float(candle[1]),
+                        high=float(candle[2]),
+                        low=float(candle[3]),
+                        close=float(candle[4]),
+                        volume=float(candle[5])
+                    ))
+
+                return market_data
+
+        except Exception as e:
+            raise ValueError(f"Failed to fetch data from Binance.US: {str(e)}")
 
     async def subscribe_realtime(
         self,

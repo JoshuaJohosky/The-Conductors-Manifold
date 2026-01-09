@@ -91,7 +91,7 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <div className="header-content">
           <h1 className="title">The Conductor's Manifold [v1.3 LIVE]</h1>
-          <p className="subtitle">Real-Time Geometric Interpretation · Stocks & Crypto · Multi-Scale Analysis</p>
+          <p className="subtitle">Real-Time Geometric Interpretation · Stocks (Alpha Vantage) · Crypto (Binance.US)</p>
         </div>
       </header>
 
@@ -116,7 +116,8 @@ const Dashboard = () => {
             className="select-field"
           >
             <option value="alphavantage">Alpha Vantage (US Stocks)</option>
-            <option value="coingecko">CoinGecko (Crypto - US Legal)</option>
+            <option value="binanceus">Binance.US (Crypto - Free, High Limits)</option>
+            <option value="coingecko">CoinGecko (Crypto - Rate Limited)</option>
           </select>
         </div>
 

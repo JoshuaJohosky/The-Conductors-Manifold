@@ -28,6 +28,7 @@ from backend.services.data_ingestion import (
     DataIngestionService,
     AlphaVantageDataFeed,
     BinanceDataFeed,
+    BinanceUSDataFeed,
     CoinGeckoDataFeed,
     MarketData
 )
@@ -94,13 +95,17 @@ async def startup_event():
     )
     data_service.register_feed(
         "binance",
-        BinanceDataFeed()
+        BinanceDataFeed()  # Global Binance (not available in USA)
+    )
+    data_service.register_feed(
+        "binanceus",
+        BinanceUSDataFeed()  # US-compliant, free, 2400 calls/min
     )
     data_service.register_feed(
         "coingecko",
         CoinGeckoDataFeed()  # Free, no API key needed
     )
-    print("✨ The Conductor's Manifold API is online (with CoinGecko crypto support)")
+    print("✨ The Conductor's Manifold API is online (Alpha Vantage + Binance.US + CoinGecko)")
 
 
 # Helper functions
