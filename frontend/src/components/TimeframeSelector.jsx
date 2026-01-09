@@ -1,7 +1,13 @@
 import React from 'react';
 
+// Updated: v1.1 - Fixed prop names (current, onSelect)
 const TimeframeSelector = ({ current, onSelect }) => {
   const timeframes = ['1H', '4H', '1D', '1W'];
+
+  // Debug: verify props are received correctly
+  if (!onSelect) {
+    console.error('TimeframeSelector: onSelect prop is missing!');
+  }
 
   return (
     <div className="flex space-x-2 bg-black p-1 rounded border border-gray-800">
