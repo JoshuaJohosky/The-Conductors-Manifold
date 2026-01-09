@@ -101,6 +101,7 @@ const Dashboard = () => {
             className="select-field"
           >
             <option value="alphavantage">Alpha Vantage (US Stocks)</option>
+            <option value="coingecko">CoinGecko (Crypto - US Legal)</option>
           </select>
         </div>
 

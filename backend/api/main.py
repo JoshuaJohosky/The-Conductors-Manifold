@@ -28,6 +28,7 @@ from backend.services.data_ingestion import (
     DataIngestionService,
     AlphaVantageDataFeed,
     BinanceDataFeed,
+    CoinGeckoDataFeed,
     MarketData
 )
 
@@ -95,7 +96,11 @@ async def startup_event():
         "binance",
         BinanceDataFeed()
     )
-    print("✨ The Conductor's Manifold API is online")
+    data_service.register_feed(
+        "coingecko",
+        CoinGeckoDataFeed()  # Free, no API key needed
+    )
+    print("✨ The Conductor's Manifold API is online (with CoinGecko crypto support)")
 
 
 # Helper functions

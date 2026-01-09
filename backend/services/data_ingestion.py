@@ -224,6 +224,82 @@ class BinanceDataFeed(DataFeed):
                     callback(market_data)
 
 
+class CoinGeckoDataFeed(DataFeed):
+    """
+    CoinGecko API feed for crypto data (US-compliant, free)
+    """
+    BASE_URL = "https://api.coingecko.com/api/v3"
+
+    async def fetch_historical(
+        self,
+        symbol: str,
+        interval: str = "1d",
+        limit: int = 100
+    ) -> List[MarketData]:
+        """Fetch historical crypto data from CoinGecko"""
+        await self.connect()
+
+        # Map common symbols to CoinGecko IDs
+        symbol_map = {
+            "BTCUSD": "bitcoin",
+            "ETHUSD": "ethereum",
+            "XRPUSD": "ripple",
+            "XRP": "ripple",
+            "BTC": "bitcoin",
+            "ETH": "ethereum",
+            "SOLUSD": "solana",
+            "SOL": "solana",
+            "ADAUSD": "cardano",
+            "ADA": "cardano"
+        }
+
+        coin_id = symbol_map.get(symbol.upper(), symbol.lower())
+
+        # CoinGecko only supports daily data
+        days = min(limit, 365)  # Max 365 days for free tier
+
+        url = f"{self.BASE_URL}/coins/{coin_id}/market_chart"
+        params = {
+            "vs_currency": "usd",
+            "days": days,
+            "interval": "daily"
+        }
+
+        try:
+            async with self.session.get(url, params=params) as response:
+                if response.status != 200:
+                    text = await response.text()
+                    raise ValueError(f"CoinGecko API error: {text}")
+
+                data = await response.json()
+
+                # Parse CoinGecko response
+                prices = data.get("prices", [])
+                volumes = data.get("total_volumes", [])
+
+                if not prices:
+                    raise ValueError(f"No time series data found for {symbol}")
+
+                market_data_list = []
+                for i, (timestamp_ms, price) in enumerate(prices):
+                    volume = volumes[i][1] if i < len(volumes) else 0
+
+                    market_data_list.append(MarketData(
+                        symbol=symbol,
+                        timestamp=datetime.fromtimestamp(timestamp_ms / 1000),
+                        open=price,  # CoinGecko doesn't provide OHLC for free
+                        high=price,
+                        low=price,
+                        close=price,
+                        volume=volume
+                    ))
+
+                return market_data_list[-limit:]
+
+        except Exception as e:
+            raise ValueError(f"Failed to fetch data from CoinGecko: {str(e)}")
+
+
 class DataIngestionService:
     """
     Main service for managing data feeds and caching.
