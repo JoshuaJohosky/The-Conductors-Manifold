@@ -1,0 +1,223 @@
+/* Manifold Pulse Styles */
+
+.manifold-pulse {
+  padding: 1.5rem;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.pulse-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pulse-header h2 {
+  font-size: 1.5rem;
+  color: #00ffff;
+  margin-bottom: 0.5rem;
+}
+
+.pulse-symbol {
+  font-size: 1.125rem;
+  color: #00ff00;
+  font-weight: 600;
+}
+
+.pulse-timestamp {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+/* State Indicator */
+.pulse-state {
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.state-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.state-label {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Metrics */
+.pulse-metric {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e0e0e0;
+}
+
+.metric-value.price {
+  color: #00ff00;
+}
+
+.metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.level-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #000;
+}
+
+/* Metric Bar */
+.metric-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.metric-description {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
+/* Attractor */
+.pulse-metric.attractor {
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  background: rgba(0, 255, 0, 0.05);
+}
+
+.attractor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.attractor-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #00ff00;
+}
+
+.attractor-distance {
+  font-size: 0.875rem;
+  color: #888;
+}
+
+.attractor-description {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+/* Singularities */
+.pulse-metric.singularities {
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.singularity-count {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.count-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #ff0000;
+  line-height: 1;
+}
+
+.count-label {
+  font-size: 0.875rem;
+  color: #888;
+  text-transform: uppercase;
+}
+
+/* Interpretation */
+.pulse-interpretation {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 0, 0.1));
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 12px;
+}
+
+.interpretation-title {
+  font-size: 1rem;
+  color: #00ffff;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.interpretation-text {
+  font-size: 0.9375rem;
+  color: #e0e0e0;
+  line-height: 1.7;
+}
+
+/* Scrollbar */
+.manifold-pulse::-webkit-scrollbar {
+  width: 8px;
+}
+
+.manifold-pulse::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.manifold-pulse::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.manifold-pulse::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.5);
+}
