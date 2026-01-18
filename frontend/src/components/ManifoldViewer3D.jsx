@@ -324,6 +324,15 @@ function addSingularityMarkers(data, scene) {
   const { singularities, prices, timestamp, curvature_array, tension, local_entropy } = data;
   const singularityObjects = [];
 
+  console.log('Singularity data structure:', {
+    singularities,
+    pricesLength: prices?.length,
+    timestampLength: timestamp?.length,
+    curvatureArrayLength: curvature_array?.length,
+    tensionLength: tension?.length,
+    localEntropyLength: local_entropy?.length
+  });
+
   singularities.forEach((idx) => {
     if (idx >= prices.length) return;
 
@@ -346,14 +355,29 @@ function addSingularityMarkers(data, scene) {
     const sphere = new THREE.Mesh(geometry, material);
     sphere.position.set(x, y + 1, z);
 
+    // Extract actual values from arrays - backend sends arrays, not single values
+    const actualPrice = prices[idx];
+    const actualTimestamp = timestamp[idx];
+    const actualCurvature = curvature_array?.[idx];
+    const actualTension = tension?.[idx];
+    const actualEntropy = local_entropy?.[idx];
+
+    console.log(`Singularity ${idx}:`, {
+      price: actualPrice,
+      timestamp: actualTimestamp,
+      curvature: actualCurvature,
+      tension: actualTension,
+      entropy: actualEntropy
+    });
+
     // Store singularity data in userData for click interaction
     sphere.userData = {
       index: idx,
-      price: prices[idx],
-      timestamp: timestamp[idx] ? new Date(timestamp[idx] * 1000).toLocaleString() : 'Unknown',
-      curvature: (data.curvature_array || curvature_array)?.[idx] || data.curvature || 0,
-      tension: (data.tension || tension)?.[idx] || data.tension_value || 0,
-      entropy: local_entropy?.[idx] || data.entropy || 0
+      price: actualPrice,
+      timestamp: actualTimestamp ? new Date(actualTimestamp * 1000).toLocaleString() : 'Unknown',
+      curvature: actualCurvature,
+      tension: actualTension,
+      entropy: actualEntropy
     };
 
     // Add glow effect
