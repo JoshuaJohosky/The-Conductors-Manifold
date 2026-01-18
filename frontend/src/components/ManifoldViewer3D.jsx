@@ -17,6 +17,9 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
   const meshRef = useRef(null);
+  const cameraRef = useRef(null);
+  const singularityObjectsRef = useRef([]);
+  const [selectedSingularity, setSelectedSingularity] = useState(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -35,6 +38,7 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
     );
     camera.position.set(30, 40, 30);
     camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -47,6 +51,26 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+
+    // Add click event listener for singularity interaction
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const onMouseClick = (event) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(singularityObjectsRef.current);
+
+      if (intersects.length > 0) {
+        const singularityData = intersects[0].object.userData;
+        setSelectedSingularity(singularityData);
+      }
+    };
+
+    renderer.domElement.addEventListener('click', onMouseClick);
 
     // Add ambient light
     const ambientLight = new THREE.AmbientLight(0x404040, 2);
@@ -77,6 +101,9 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
 
     // Cleanup
     return () => {
+      if (renderer.domElement) {
+        renderer.domElement.removeEventListener('click', onMouseClick);
+      }
       if (containerRef.current && renderer.domElement) {
         containerRef.current.removeChild(renderer.domElement);
       }
@@ -101,7 +128,7 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
     meshRef.current = manifoldMesh;
 
     // Add singularity markers
-    addSingularityMarkers(manifoldData, sceneRef.current);
+    singularityObjectsRef.current = addSingularityMarkers(manifoldData, sceneRef.current);
 
     // Add attractor indicators
     addAttractorIndicators(manifoldData, sceneRef.current);
@@ -110,12 +137,61 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
 
   return (
     <div>
-      <div ref={containerRef} className="manifold-3d-container" />
+      <div ref={containerRef} className="manifold-3d-container" style={{ position: 'relative' }} />
       {manifoldData && (
         <div className="manifold-legend">
           <div className="legend-item">
             <div className="legend-color" style={{ background: 'linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000)' }} />
             <span>Low Entropy → High Entropy</span>
+          </div>
+        </div>
+      )}
+      {selectedSingularity && (
+        <div className="singularity-popup" style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          background: 'rgba(0, 0, 0, 0.9)',
+          border: '2px solid #ff0000',
+          borderRadius: '8px',
+          padding: '15px',
+          color: '#fff',
+          minWidth: '250px',
+          zIndex: 1000,
+          boxShadow: '0 0 20px rgba(255, 0, 0, 0.5)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <h3 style={{ margin: 0, color: '#ff0000', fontSize: '18px' }}>⚠️ Singularity Detected</h3>
+            <button
+              onClick={() => setSelectedSingularity(null)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '20px'
+              }}
+            >×</button>
+          </div>
+          <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Price:</strong> ${selectedSingularity.price?.toFixed(2)}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Timestamp:</strong> {selectedSingularity.timestamp}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Curvature:</strong> {selectedSingularity.curvature?.toFixed(4)}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Tension:</strong> {selectedSingularity.tension?.toFixed(4)}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Entropy:</strong> {selectedSingularity.entropy?.toFixed(2)}
+            </div>
+            <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 0, 0, 0.2)', borderRadius: '4px', fontSize: '12px' }}>
+              <strong>Interpretation:</strong> Extreme tension point where the manifold reached unsustainable geometry. Corrections occurred or are imminent.
+            </div>
           </div>
         </div>
       )}
@@ -203,7 +279,8 @@ function createManifoldSurface(data) {
  * Add visual markers for singularities
  */
 function addSingularityMarkers(data, scene) {
-  const { singularities, prices, timestamp } = data;
+  const { singularities, prices, timestamp, curvature_array, tension, local_entropy } = data;
+  const singularityObjects = [];
 
   singularities.forEach((idx) => {
     if (idx >= prices.length) return;
@@ -227,6 +304,16 @@ function addSingularityMarkers(data, scene) {
     const sphere = new THREE.Mesh(geometry, material);
     sphere.position.set(x, y + 1, z);
 
+    // Store singularity data in userData for click interaction
+    sphere.userData = {
+      index: idx,
+      price: prices[idx],
+      timestamp: timestamp[idx] ? new Date(timestamp[idx]).toLocaleString() : 'Unknown',
+      curvature: curvature_array && curvature_array[idx] ? curvature_array[idx] : 0,
+      tension: tension && tension[idx] ? tension[idx] : 0,
+      entropy: local_entropy && local_entropy[idx] ? local_entropy[idx] : 0
+    };
+
     // Add glow effect
     const glowGeometry = new THREE.SphereGeometry(1.2, 16, 16);
     const glowMaterial = new THREE.MeshBasicMaterial({
@@ -238,7 +325,10 @@ function addSingularityMarkers(data, scene) {
     sphere.add(glow);
 
     scene.add(sphere);
+    singularityObjects.push(sphere);
   });
+
+  return singularityObjects;
 }
 
 /**
