@@ -151,46 +151,88 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
           position: 'absolute',
           top: '20px',
           right: '20px',
-          background: 'rgba(0, 0, 0, 0.9)',
+          background: 'linear-gradient(135deg, rgba(20, 0, 0, 0.95), rgba(40, 0, 0, 0.95))',
           border: '2px solid #ff0000',
-          borderRadius: '8px',
-          padding: '15px',
+          borderRadius: '12px',
+          padding: '20px',
           color: '#fff',
-          minWidth: '250px',
+          minWidth: '300px',
+          maxWidth: '350px',
           zIndex: 1000,
-          boxShadow: '0 0 20px rgba(255, 0, 0, 0.5)'
+          boxShadow: '0 0 30px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1)',
+          backdropFilter: 'blur(10px)'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h3 style={{ margin: 0, color: '#ff0000', fontSize: '18px' }}>⚠️ Singularity Detected</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid rgba(255, 0, 0, 0.3)', paddingBottom: '10px' }}>
+            <h3 style={{ margin: 0, color: '#ff0000', fontSize: '20px', fontWeight: 'bold', textShadow: '0 0 10px rgba(255, 0, 0, 0.5)' }}>
+              ⚠️ SINGULARITY DETECTED
+            </h3>
             <button
               onClick={() => setSelectedSingularity(null)}
               style={{
-                background: 'transparent',
-                border: 'none',
+                background: 'rgba(255, 0, 0, 0.2)',
+                border: '1px solid #ff0000',
+                borderRadius: '4px',
                 color: '#fff',
                 cursor: 'pointer',
-                fontSize: '20px'
+                fontSize: '18px',
+                width: '28px',
+                height: '28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
               }}
+              onMouseOver={(e) => e.target.style.background = 'rgba(255, 0, 0, 0.4)'}
+              onMouseOut={(e) => e.target.style.background = 'rgba(255, 0, 0, 0.2)'}
             >×</button>
           </div>
-          <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
-            <div style={{ marginBottom: '8px' }}>
-              <strong>Price:</strong> ${selectedSingularity.price?.toFixed(2)}
+          <div style={{ fontSize: '14px', lineHeight: '1.8' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '120px 1fr',
+              gap: '10px',
+              marginBottom: '15px'
+            }}>
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Price:</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '16px', color: '#fff' }}>
+                ${selectedSingularity.price?.toFixed(2) || 'N/A'}
+              </div>
+
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Timestamp:</div>
+              <div style={{ fontSize: '12px', color: '#ccc' }}>
+                {selectedSingularity.timestamp || 'Unknown'}
+              </div>
+
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Curvature:</div>
+              <div style={{ fontFamily: 'monospace', color: '#ffaa00' }}>
+                {typeof selectedSingularity.curvature === 'number' ? selectedSingularity.curvature.toFixed(6) : 'N/A'}
+              </div>
+
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Tension:</div>
+              <div style={{ fontFamily: 'monospace', color: '#ff0000', fontWeight: 'bold' }}>
+                {typeof selectedSingularity.tension === 'number' ? selectedSingularity.tension.toFixed(6) : 'N/A'}
+              </div>
+
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Entropy:</div>
+              <div style={{ fontFamily: 'monospace', color: '#00ffff' }}>
+                {typeof selectedSingularity.entropy === 'number' ? selectedSingularity.entropy.toFixed(4) : 'N/A'}
+              </div>
             </div>
-            <div style={{ marginBottom: '8px' }}>
-              <strong>Timestamp:</strong> {selectedSingularity.timestamp}
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <strong>Curvature:</strong> {selectedSingularity.curvature?.toFixed(4)}
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <strong>Tension:</strong> {selectedSingularity.tension?.toFixed(4)}
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <strong>Entropy:</strong> {selectedSingularity.entropy?.toFixed(2)}
-            </div>
-            <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 0, 0, 0.2)', borderRadius: '4px', fontSize: '12px' }}>
-              <strong>Interpretation:</strong> Extreme tension point where the manifold reached unsustainable geometry. Corrections occurred or are imminent.
+
+            <div style={{
+              marginTop: '15px',
+              padding: '12px',
+              background: 'rgba(255, 0, 0, 0.15)',
+              borderLeft: '4px solid #ff0000',
+              borderRadius: '4px',
+              fontSize: '13px',
+              lineHeight: '1.5'
+            }}>
+              <div style={{ color: '#ff6666', fontWeight: 'bold', marginBottom: '5px' }}>⚡ Interpretation:</div>
+              <div style={{ color: '#ddd' }}>
+                Extreme tension point where the manifold geometry became unsustainable.
+                This singularity marks a critical inflection where corrections occurred or remain imminent.
+              </div>
             </div>
           </div>
         </div>
@@ -308,10 +350,10 @@ function addSingularityMarkers(data, scene) {
     sphere.userData = {
       index: idx,
       price: prices[idx],
-      timestamp: timestamp[idx] ? new Date(timestamp[idx]).toLocaleString() : 'Unknown',
-      curvature: curvature_array && curvature_array[idx] ? curvature_array[idx] : 0,
-      tension: tension && tension[idx] ? tension[idx] : 0,
-      entropy: local_entropy && local_entropy[idx] ? local_entropy[idx] : 0
+      timestamp: timestamp[idx] ? new Date(timestamp[idx] * 1000).toLocaleString() : 'Unknown',
+      curvature: (data.curvature_array || curvature_array)?.[idx] || data.curvature || 0,
+      tension: (data.tension || tension)?.[idx] || data.tension_value || 0,
+      entropy: local_entropy?.[idx] || data.entropy || 0
     };
 
     // Add glow effect
