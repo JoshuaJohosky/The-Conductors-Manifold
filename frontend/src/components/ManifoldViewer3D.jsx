@@ -122,8 +122,12 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
       meshRef.current.material.dispose();
     }
 
-    // Remove old singularity objects
-    singularityObjectsRef.current.forEach(obj => {
+    // Remove ALL old singularity objects from scene (not just from ref)
+    // Old singularities have userData.isSingularity = true
+    const oldSingularities = sceneRef.current.children.filter(
+      obj => obj.userData?.isSingularity === true
+    );
+    oldSingularities.forEach(obj => {
       sceneRef.current.remove(obj);
       obj.geometry?.dispose();
       obj.material?.dispose();
@@ -355,15 +359,6 @@ function addSingularityMarkers(data, scene) {
   const { singularities, prices, timestamp, curvature_array, tension, local_entropy } = data;
   const singularityObjects = [];
 
-  console.log('Singularity data structure:', {
-    singularities,
-    pricesLength: prices?.length,
-    timestampLength: timestamp?.length,
-    curvatureArrayLength: curvature_array?.length,
-    tensionLength: tension?.length,
-    localEntropyLength: local_entropy?.length
-  });
-
   singularities.forEach((idx) => {
     if (idx >= prices.length) return;
 
@@ -393,16 +388,9 @@ function addSingularityMarkers(data, scene) {
     const actualTension = tension?.[idx];
     const actualEntropy = local_entropy?.[idx];
 
-    console.log(`Singularity ${idx}:`, {
-      price: actualPrice,
-      timestamp: actualTimestamp,
-      curvature: actualCurvature,
-      tension: actualTension,
-      entropy: actualEntropy
-    });
-
     // Store singularity data in userData for click interaction
     sphere.userData = {
+      isSingularity: true, // Tag for cleanup
       index: idx,
       price: actualPrice,
       timestamp: actualTimestamp ? new Date(actualTimestamp * 1000).toLocaleString() : 'Unknown',
