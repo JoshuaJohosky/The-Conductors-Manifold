@@ -122,6 +122,37 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
       meshRef.current.material.dispose();
     }
 
+    // Remove old singularity objects
+    singularityObjectsRef.current.forEach(obj => {
+      sceneRef.current.remove(obj);
+      obj.geometry?.dispose();
+      obj.material?.dispose();
+      // Remove glow child if exists
+      obj.children.forEach(child => {
+        child.geometry?.dispose();
+        child.material?.dispose();
+      });
+    });
+    singularityObjectsRef.current = [];
+
+    // Remove old attractors (they don't have a ref, so we need to filter by type)
+    const objectsToRemove = sceneRef.current.children.filter(
+      obj => obj.type === 'Mesh' && (obj.geometry?.type === 'RingGeometry' || obj.geometry?.type === 'SphereGeometry')
+    );
+    objectsToRemove.forEach(obj => {
+      sceneRef.current.remove(obj);
+      obj.geometry?.dispose();
+      obj.material?.dispose();
+    });
+
+    // Remove old attractor lines
+    const linesToRemove = sceneRef.current.children.filter(obj => obj.type === 'Line');
+    linesToRemove.forEach(line => {
+      sceneRef.current.remove(line);
+      line.geometry?.dispose();
+      line.material?.dispose();
+    });
+
     // Create manifold surface
     const manifoldMesh = createManifoldSurface(manifoldData);
     sceneRef.current.add(manifoldMesh);
