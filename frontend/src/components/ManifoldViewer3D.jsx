@@ -135,11 +135,11 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
     });
     singularityObjectsRef.current = [];
 
-    // Remove old attractors (they don't have a ref, so we need to filter by type)
-    const objectsToRemove = sceneRef.current.children.filter(
-      obj => obj.type === 'Mesh' && (obj.geometry?.type === 'RingGeometry' || obj.geometry?.type === 'SphereGeometry')
+    // Remove old attractor rings (RingGeometry only - don't touch SphereGeometry which are singularities)
+    const ringsToRemove = sceneRef.current.children.filter(
+      obj => obj.type === 'Mesh' && obj.geometry?.type === 'RingGeometry'
     );
-    objectsToRemove.forEach(obj => {
+    ringsToRemove.forEach(obj => {
       sceneRef.current.remove(obj);
       obj.geometry?.dispose();
       obj.material?.dispose();
