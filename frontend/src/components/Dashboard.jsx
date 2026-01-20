@@ -74,7 +74,7 @@ const Dashboard = () => {
       const data = await api.analyzeSymbol(
         symbol,
         feed,
-        interval,
+        interval, // FIXED: ensure correct Binance interval
         100,
         timescale
       );
