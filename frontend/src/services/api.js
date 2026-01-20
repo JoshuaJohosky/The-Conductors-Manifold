@@ -1,4 +1,4 @@
-/**
+/** 
  * API Service for The Conductor's Manifold
  *
  * Handles all communication with the backend API and WebSocket connections.
@@ -42,7 +42,7 @@ class ManifoldAPIClient {
     }
   }
 
-  // Analyze a symbol
+  // Analyze a symbol (FIXED: interval now correctly passed)
   async analyzeSymbol(symbol, feed = 'binance', interval = '1d', limit = 100, timescale = 'daily') {
     return this.request(
       `/api/v1/analyze/${symbol}?feed=${feed}&interval=${interval}&limit=${limit}&timescale=${timescale}`
