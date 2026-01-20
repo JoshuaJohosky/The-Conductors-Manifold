@@ -133,7 +133,7 @@ export const useRealtimeManifold = (symbol, feed = 'binance') => {
       ws.close();
       setConnected(false);
     };
-  }, [symbol, feed]);
+  }, [symbol, feed, client]);
 
   return { data, connected, error };
 };
