@@ -1,13 +1,13 @@
 /**
  * ManifoldViewer3D - 3D Visualization of the Market Manifold
- * VERSION: SF-DEMO-READY-STABLE (Fixed Hook Order + Raycaster Logic)
+ * VERSION: SF-DEMO-READY-STABLE (Strict Hook Order + High-Fidelity UI)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
-  // 1. ALL HOOKS MUST BE AT THE TOP LEVEL - NO EXCEPTIONS
+  // 1. ALL HOOKS AT THE ABSOLUTE TOP LEVEL
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -16,7 +16,7 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
   const singularityObjectsRef = useRef([]);
   const [selectedSingularity, setSelectedSingularity] = useState(null);
 
-  // 2. MAIN SCENE INITIALIZATION
+  // 2. THREE.JS INITIALIZATION
   useEffect(() => {
     const currentContainer = containerRef.current;
     if (!currentContainer) return;
@@ -49,17 +49,14 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      // 'true' allows us to hit the child 'glow' mesh
       const intersects = raycaster.intersectObjects(singularityObjectsRef.current, true);
 
       if (intersects.length > 0) {
         let target = intersects[0].object;
-        
-        // FIX: If we clicked the 'glow' mesh, bubble up to the parent sphere for data
+        // Bubble up if we hit the glow child
         if (!target.userData.price && target.parent && target.parent.userData.price) {
           target = target.parent;
         }
-
         if (target.userData && target.userData.price) {
           setSelectedSingularity({...target.userData});
         }
@@ -91,10 +88,9 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
 
   // 3. GEOMETRY UPDATER
   useEffect(() => {
-    // Conditionals happen INSIDE the Hook, satisfying ESLint
     if (!manifoldData || !sceneRef.current) return;
 
-    // Nuclear cleanup of old objects
+    // Nuclear cleanup
     const toRemove = [];
     sceneRef.current.traverse((child) => {
       if (child.isMesh && child !== meshRef.current && !child.isGridHelper) {
@@ -117,9 +113,9 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
     addAttractorIndicators(manifoldData, sceneRef.current);
   }, [manifoldData]);
 
-  // 4. THE UI
+  // 4. UI RENDER
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={containerRef} className="manifold-3d-container" />
       
       {selectedSingularity && (
@@ -134,21 +130,16 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
               <div style={{ fontFamily: 'monospace', fontSize: '16px', color: '#fff' }}>
                 ${selectedSingularity.price?.toFixed(2)}
               </div>
-
               <div style={labelStyle}>Timestamp:</div>
               <div style={{ fontSize: '12px', color: '#ccc' }}>{selectedSingularity.timestamp}</div>
-
               <div style={labelStyle}>Curvature:</div>
               <div style={{ fontFamily: 'monospace', color: '#ffaa00' }}>{selectedSingularity.curvature?.toFixed(6)}</div>
-
               <div style={labelStyle}>Tension:</div>
               <div style={{ fontFamily: 'monospace', color: '#ff0000', fontWeight: 'bold' }}>{selectedSingularity.tension?.toFixed(6)}</div>
-
               <div style={labelStyle}>Entropy:</div>
               <div style={{ fontFamily: 'monospace', color: '#00ffff' }}>{selectedSingularity.entropy?.toFixed(4)}</div>
             </div>
-            
-            <div style={interpretationStyle}>
+            <div style={interpretationBoxStyle}>
               <div style={{ color: '#ff6666', fontWeight: 'bold', marginBottom: '5px' }}>⚡ Interpretation:</div>
               <div style={{ color: '#ddd' }}>
                 Extreme tension point where the manifold geometry became unsustainable.
@@ -161,7 +152,7 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
   );
 };
 
-// --- Helpers Outside Component ---
+// --- Helpers (Outside to prevent re-creation) ---
 
 function createManifoldSurface(data) {
   const { prices, local_entropy } = data;
@@ -184,10 +175,9 @@ function createManifoldSurface(data) {
     const z = Math.floor(i / width) * 2 - height;
     const y = ((prices[i] - priceMin) / priceRange) * 20;
     vertices.push(x, y, z);
-
     const norm = (local_entropy[i] - entropyMin) / entropyRange;
-    const color = getEntropyColor(norm);
-    colors.push(color.r, color.g, color.b);
+    const c = getEntropyColor(norm);
+    colors.push(c.r, c.g, c.b);
   }
 
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
@@ -205,13 +195,9 @@ function createManifoldSurface(data) {
       }
     }
   }
-
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
-
-  return new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({
-    vertexColors: true, side: THREE.DoubleSide, shininess: 30, transparent: true, opacity: 0.9
-  }));
+  return new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }));
 }
 
 function addSingularityMarkers(data, scene) {
@@ -224,17 +210,12 @@ function addSingularityMarkers(data, scene) {
 
   singularities.forEach((idx) => {
     if (idx >= prices.length) return;
-
     const x = (idx % width) * 2 - width;
     const z = Math.floor(idx / width) * 2 - Math.ceil(prices.length / width);
     const y = ((prices[idx] - priceMin) / priceRange) * 20;
 
-    const sphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.8, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.8 })
-    );
+    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
     sphere.position.set(x, y + 1, z);
-
     sphere.userData = {
       price: prices[idx],
       timestamp: timestamp[idx] ? new Date(timestamp[idx] * 1000).toLocaleString() : 'Unknown',
@@ -243,12 +224,8 @@ function addSingularityMarkers(data, scene) {
       entropy: local_entropy?.[idx]
     };
 
-    const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(1.2, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 })
-    );
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(1.2, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 }));
     sphere.add(glow);
-
     scene.add(sphere);
     objects.push(sphere);
   });
@@ -260,13 +237,9 @@ function addAttractorIndicators(data, scene) {
   const priceMin = Math.min(...prices);
   const priceMax = Math.max(...prices);
   const priceRange = (priceMax - priceMin) || 1;
-
   attractors.forEach(({ price, strength }) => {
     const y = ((price - priceMin) / priceRange) * 20;
-    const ring = new THREE.Mesh(
-      new THREE.RingGeometry(2, 2.5, 32),
-      new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, transparent: true, opacity: strength * 0.6 })
-    );
+    const ring = new THREE.Mesh(new THREE.RingGeometry(2, 2.5, 32), new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, transparent: true, opacity: strength }));
     ring.rotation.x = Math.PI / 2;
     ring.position.y = y;
     scene.add(ring);
@@ -280,18 +253,13 @@ function getEntropyColor(t) {
   return { r: 1, g: 1 - (t - 0.75) * 4, b: 0 };
 }
 
-// STYLES
-const popupStyle = {
-  position: 'absolute', top: '20px', right: '20px', background: 'linear-gradient(135deg, rgba(20, 0, 0, 0.95), rgba(40, 0, 0, 0.95))',
-  border: '2px solid #ff0000', borderRadius: '12px', padding: '20px', color: '#fff',
-  minWidth: '300px', maxWidth: '350px', zIndex: 1000, boxShadow: '0 0 30px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1)',
-  backdropFilter: 'blur(10px)'
-};
-const headerStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid rgba(255, 0, 0, 0.3)', paddingBottom: '10px' };
-const titleStyle = { margin: 0, color: '#ff0000', fontSize: '20px', fontWeight: 'bold', textShadow: '0 0 10px rgba(255, 0, 0, 0.5)' };
-const closeButtonStyle = { background: 'rgba(255, 0, 0, 0.2)', border: '1px solid #ff0000', borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '18px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-const gridStyle = { display: 'grid', gridTemplateColumns: '120px 1fr', gap: '10px', marginBottom: '15px' };
+// Inline Styles
+const popupStyle = { position: 'absolute', top: '20px', right: '20px', background: 'linear-gradient(135deg, rgba(20, 0, 0, 0.95), rgba(40, 0, 0, 0.95))', border: '2px solid #ff0000', borderRadius: '12px', padding: '20px', color: '#fff', zIndex: 1000, backdropFilter: 'blur(10px)', boxShadow: '0 0 30px rgba(255, 0, 0, 0.6)' };
+const headerStyle = { display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #500' };
+const titleStyle = { margin: 0, color: '#ff0000', textShadow: '0 0 10px rgba(255,0,0,0.5)' };
+const closeButtonStyle = { background: 'none', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer' };
+const gridStyle = { display: 'grid', gridTemplateColumns: '120px 1fr', gap: '10px' };
 const labelStyle = { color: '#ff6666', fontWeight: 'bold' };
-const interpretationStyle = { marginTop: '15px', padding: '12px', background: 'rgba(255, 0, 0, 0.15)', borderLeft: '4px solid #ff0000', borderRadius: '4px', fontSize: '13px' };
+const interpretationBoxStyle = { marginTop: '15px', padding: '12px', background: 'rgba(255, 0, 0, 0.15)', borderLeft: '4px solid #ff0000', borderRadius: '4px', fontSize: '13px' };
 
 export default ManifoldViewer3D;
