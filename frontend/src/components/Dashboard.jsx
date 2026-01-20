@@ -177,8 +177,9 @@ const Dashboard = () => {
             </div>
           )}
 
-       {!loading && view === '3d' && (
-  <div className="view-container">
+      {!loading && view === '3d' && !manifoldData && (
+  <div className="empty-state">
+
     <ManifoldViewer3D
       manifoldData={manifoldData}
       width={1000}
