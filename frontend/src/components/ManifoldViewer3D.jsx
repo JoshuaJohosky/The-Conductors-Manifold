@@ -1,6 +1,3 @@
-if (!manifoldData) {
-  return null;
-}
 /**
  * ManifoldViewer3D - 3D Visualization of the Market Manifold
  *
@@ -16,6 +13,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
+   if (!manifoldData) {
+    return null;
+  }
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
