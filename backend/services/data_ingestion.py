@@ -475,13 +475,28 @@ class DataIngestionService:
     Main service for managing data feeds and caching.
     """
 
-    def __init__(self):
+    def __init__(self, cache_ttl_seconds: int = 300):
         self.feeds: Dict[str, DataFeed] = {}
-        self.cache: Dict[str, List[MarketData]] = {}
+        self.cache: Dict[str, tuple[List[MarketData], float]] = {}  # (data, timestamp)
+        self.cache_ttl = cache_ttl_seconds  # Cache expires after 5 minutes by default
 
     def register_feed(self, name: str, feed: DataFeed):
         """Register a data feed"""
         self.feeds[name] = feed
+
+    def clear_cache(self, feed_name: Optional[str] = None, symbol: Optional[str] = None):
+        """
+        Clear cached data. If feed_name and symbol are provided, only clear that specific cache.
+        Otherwise, clear all caches.
+        """
+        if feed_name and symbol:
+            # Clear specific symbol cache
+            keys_to_remove = [k for k in self.cache.keys() if k.startswith(f"{feed_name}:{symbol}:")]
+            for key in keys_to_remove:
+                del self.cache[key]
+        else:
+            # Clear all caches
+            self.cache.clear()
 
     async def fetch_data(
         self,
@@ -506,11 +521,14 @@ class DataIngestionService:
         """
         cache_key = f"{feed_name}:{symbol}:{interval}"
 
-        # Check cache
+        # Check cache with expiration
         if use_cache and cache_key in self.cache:
-            cached = self.cache[cache_key]
-            if len(cached) >= limit:
-                return cached[-limit:]
+            cached_data, cached_time = self.cache[cache_key]
+            cache_age = datetime.now().timestamp() - cached_time
+
+            # Return cached data only if it's fresh enough AND has enough data points
+            if cache_age < self.cache_ttl and len(cached_data) >= limit:
+                return cached_data[-limit:]
 
         # Fetch from feed
         if feed_name not in self.feeds:
@@ -519,8 +537,8 @@ class DataIngestionService:
         feed = self.feeds[feed_name]
         data = await feed.fetch_historical(symbol, interval, limit)
 
-        # Update cache
-        self.cache[cache_key] = data
+        # Update cache with current timestamp
+        self.cache[cache_key] = (data, datetime.now().timestamp())
 
         return data
 
