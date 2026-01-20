@@ -1,3 +1,6 @@
+if (!manifoldData) {
+  return null;
+}
 /**
  * ManifoldViewer3D - 3D Visualization of the Market Manifold
  *
