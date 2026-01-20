@@ -134,6 +134,42 @@ class AlphaVantageDataFeed(DataFeed):
             market_data.sort(key=lambda x: x.timestamp)
             return market_data
 
+    async def get_current_price(self, symbol: str) -> float:
+        """
+        Get the current real-time price for a stock.
+
+        Args:
+            symbol: Stock ticker (e.g., 'AAPL')
+
+        Returns:
+            Current price as float
+        """
+        await self.connect()
+
+        params = {
+            "function": "GLOBAL_QUOTE",
+            "symbol": symbol,
+            "apikey": self.api_key or "demo"
+        }
+
+        try:
+            async with self.session.get(self.BASE_URL, params=params) as response:
+                data = await response.json()
+
+                if "Global Quote" not in data:
+                    raise ValueError(f"No quote data found for {symbol}")
+
+                quote = data["Global Quote"]
+                price = float(quote.get("05. price", 0))
+
+                if price == 0:
+                    raise ValueError(f"Invalid price for {symbol}")
+
+                return price
+
+        except Exception as e:
+            raise ValueError(f"Failed to get current price from Alpha Vantage: {str(e)}")
+
 
 class BinanceDataFeed(DataFeed):
     """Binance Global API data feed for crypto (not available in USA)"""
@@ -288,6 +324,39 @@ class BinanceUSDataFeed(DataFeed):
 
         except Exception as e:
             raise ValueError(f"Failed to fetch data from Binance.US: {str(e)}")
+
+    async def get_current_price(self, symbol: str) -> float:
+        """
+        Get the current real-time price for a symbol.
+
+        Args:
+            symbol: Trading pair (e.g., 'BTCUSDT')
+
+        Returns:
+            Current price as float
+        """
+        await self.connect()
+
+        # Binance.US uses USDT pairs
+        if not symbol.endswith("USDT") and not symbol.endswith("USD"):
+            symbol = f"{symbol}USDT"
+
+        params = {"symbol": symbol.upper()}
+
+        try:
+            async with self.session.get(
+                f"{self.BASE_URL}/ticker/price",
+                params=params
+            ) as response:
+                if response.status != 200:
+                    text = await response.text()
+                    raise ValueError(f"Binance.US ticker API error: {text}")
+
+                data = await response.json()
+                return float(data['price'])
+
+        except Exception as e:
+            raise ValueError(f"Failed to get current price from Binance.US: {str(e)}")
 
     async def subscribe_realtime(
         self,
@@ -454,6 +523,34 @@ class DataIngestionService:
         self.cache[cache_key] = data
 
         return data
+
+    async def get_current_price(
+        self,
+        feed_name: str,
+        symbol: str
+    ) -> float:
+        """
+        Get the current real-time price for a symbol.
+
+        Args:
+            feed_name: Name of registered feed
+            symbol: Trading symbol
+
+        Returns:
+            Current price as float
+        """
+        if feed_name not in self.feeds:
+            raise ValueError(f"Feed '{feed_name}' not registered")
+
+        feed = self.feeds[feed_name]
+
+        # Check if feed supports get_current_price
+        if not hasattr(feed, 'get_current_price'):
+            # Fallback: use last price from historical data
+            data = await self.fetch_data(feed_name, symbol, "1d", 1, use_cache=False)
+            return float(data[-1].close) if data else 0.0
+
+        return await feed.get_current_price(symbol)
 
     def to_numpy(self, data: List[MarketData]) -> Dict[str, np.ndarray]:
         """
