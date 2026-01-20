@@ -117,7 +117,6 @@ const Dashboard = () => {
           >
             <option value="alphavantage">Alpha Vantage (US Stocks)</option>
             <option value="binanceus">Binance.US (Crypto - Free, High Limits)</option>
-            <option value="coingecko">CoinGecko (Crypto - Rate Limited)</option>
           </select>
         </div>
 
@@ -178,15 +177,15 @@ const Dashboard = () => {
             </div>
           )}
 
-          {!loading && view === '3d' && manifoldData && (
-            <div className="view-container">
-              <ManifoldViewer3D
-                manifoldData={manifoldData}
-                width={1000}
-                height={700}
-              />
-            </div>
-          )}
+       {!loading && view === '3d' && (
+  <div className="view-container">
+    <ManifoldViewer3D
+      manifoldData={manifoldData}
+      width={1000}
+      height={700}
+    />
+  </div>
+)}
 
           {!loading && view === 'metrics' && manifoldData && (
             <div className="view-container">
