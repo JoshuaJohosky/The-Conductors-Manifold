@@ -1,339 +1,262 @@
-/* Dashboard Styles */
+/* ===========================
+   DASHBOARD LAYOUT
+   =========================== */
 
 .dashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-  color: #e0e0e0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at top, #0e1018 0%, #06070c 70%);
+  color: #e6e6eb;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Header */
+/* ===========================
+   HEADER
+   =========================== */
+
 .dashboard-header {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 2rem;
-  text-align: center;
+  padding: 18px 28px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .title {
-  font-size: 2.5rem;
+  font-size: 22px;
   font-weight: 700;
-  background: linear-gradient(135deg, #00ffff, #00ff00);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
+  color: #a9ffcf;
+  letter-spacing: 0.3px;
 }
 
 .subtitle {
-  font-size: 1rem;
-  color: #888;
-  margin-top: 0.5rem;
+  font-size: 13px;
+  color: rgba(200, 210, 255, 0.7);
 }
 
-/* Controls Bar */
+/* ===========================
+   CONTROLS BAR
+   =========================== */
+
 .controls-bar {
   display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: rgba(20, 20, 30, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 22px;
   align-items: flex-end;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 22, 40, 0.6),
+    rgba(10, 12, 22, 0.9)
+  );
 }
 
 .control-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 4px;
 }
 
 .control-group label {
-  font-size: 0.875rem;
-  color: #888;
-  font-weight: 500;
+  font-size: 11px;
+  color: rgba(180, 190, 240, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .input-field,
 .select-field {
-  padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: #e0e0e0;
-  font-size: 1rem;
-  min-width: 150px;
-  transition: all 0.3s ease;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: rgba(15, 18, 30, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 13px;
+  min-width: 140px;
 }
 
 .input-field:focus,
 .select-field:focus {
   outline: none;
-  border-color: #00ffff;
-  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.1);
+  border-color: #4cffb3;
+  box-shadow: 0 0 0 1px rgba(76, 255, 179, 0.35);
 }
 
 .btn-primary,
 .btn-secondary {
-  padding: 0.75rem 2rem;
-  border: none;
+  height: 36px;
+  padding: 0 18px;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  border: none;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #00ffff, #00ff00);
-  color: #000;
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 255, 255, 0.4);
+  background: linear-gradient(135deg, #1aff9c, #00cc7a);
+  color: #062a1c;
 }
 
 .btn-primary:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e0e0e0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e6e6eb;
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
 }
 
-/* View Selector */
+/* ===========================
+   VIEW SELECTOR
+   =========================== */
+
 .view-selector {
   display: flex;
-  gap: 0.5rem;
-  padding: 1rem 1.5rem;
-  background: rgba(20, 20, 30, 0.6);
+  gap: 8px;
+  padding: 10px 22px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .view-btn {
-  padding: 0.75rem 1.5rem;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: #888;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cfd6ff;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
 }
 
 .view-btn.active {
-  background: rgba(0, 255, 255, 0.1);
-  border-color: #00ffff;
-  color: #00ffff;
+  background: linear-gradient(135deg, #19ffb2, #00c4ff);
+  color: #041b22;
+  border: none;
 }
 
-.view-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e0e0e0;
-}
+/* ===========================
+   MAIN CONTENT
+   =========================== */
 
-/* Main Content */
 .main-content {
+  flex: 1;
   display: flex;
-  height: calc(100vh - 280px);
-  position: relative;
+  overflow: hidden;
 }
+
+/* ---- Left Sidebar ---- */
 
 .pulse-sidebar {
-  width: 350px;
-  background: rgba(20, 20, 30, 0.9);
+  width: 340px;
+  min-width: 300px;
+  max-width: 380px;
+  padding: 16px 14px 16px 18px;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
   overflow-y: auto;
 }
 
+/* ---- Primary View ---- */
+
 .primary-view {
   flex: 1;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
   overflow: hidden;
 }
 
+/* Container that holds 3D / metrics / multiscale */
 .view-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  flex: 1;
+  position: relative;
+  border-radius: 14px;
+  background: linear-gradient(
+    160deg,
+    rgba(14, 18, 38, 0.85),
+    rgba(6, 8, 16, 0.95)
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 12px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
 }
 
-/* Loading State */
+/* ===========================
+   LOADING OVERLAY
+   =========================== */
+
 .loading-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  gap: 12px;
+  background: rgba(6, 8, 16, 0.85);
+  z-index: 10;
 }
 
 .loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(0, 255, 255, 0.1);
-  border-top-color: #00ffff;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #19ffb2;
+  animation: spin 0.9s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.loading-overlay p {
-  margin-top: 1rem;
-  color: #00ffff;
-  font-size: 1.125rem;
-}
+/* ===========================
+   EMPTY STATE
+   =========================== */
 
-/* Empty State */
 .empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(200, 210, 255, 0.7);
   text-align: center;
-  color: #888;
+  gap: 6px;
 }
 
 .empty-state h2 {
-  color: #e0e0e0;
-  margin-bottom: 1rem;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-/* Footer */
+.empty-state p {
+  font-size: 13px;
+}
+
+/* ===========================
+   FOOTER
+   =========================== */
+
 .dashboard-footer {
-  background: rgba(0, 0, 0, 0.5);
+  padding: 10px 20px;
+  font-size: 11px;
+  color: rgba(200, 210, 255, 0.45);
+  display: flex;
+  justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
-  text-align: center;
-  font-size: 0.875rem;
-  color: #666;
-}
-
-.disclaimer {
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
-}
-
-/* Multi-scale View */
-.multiscale-view {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 2rem;
-}
-
-.multiscale-view h2 {
-  margin-bottom: 1.5rem;
-  color: #00ffff;
-}
-
-.scale-tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-}
-
-.scale-tab {
-  padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: #888;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.scale-tab.active {
-  background: rgba(0, 255, 255, 0.1);
-  border-color: #00ffff;
-  color: #00ffff;
-}
-
-.scale-content {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.scale-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.metric-card {
-  background: rgba(0, 0, 0, 0.3);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.metric-card h3 {
-  font-size: 0.875rem;
-  color: #888;
-  margin-bottom: 0.5rem;
-}
-
-.metric-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #00ffff;
-}
-
-.fractal-insight {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: rgba(0, 255, 255, 0.05);
-  border: 1px solid rgba(0, 255, 255, 0.2);
-  border-radius: 12px;
-}
-
-.fractal-insight h3 {
-  color: #00ffff;
-  margin-bottom: 0.5rem;
-}
-
-.fractal-insight p {
-  color: #ccc;
-  line-height: 1.6;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .controls-bar {
-    flex-direction: column;
-  }
-
-  .main-content {
-    flex-direction: column;
-  }
-
-  .pulse-sidebar {
-    width: 100%;
-    height: 300px;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  }
 }
