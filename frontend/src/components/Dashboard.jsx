@@ -1,9 +1,3 @@
-/**
- * Main Dashboard Component
- *
- * The Conductor's interface for observing the manifold in real-time.
- */
-
 import React, { useState, useEffect } from 'react';
 import ManifoldViewer3D from './ManifoldViewer3D';
 import ManifoldPulse from './ManifoldPulse';
@@ -14,43 +8,20 @@ import { useManifoldAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  // Core state
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [feed, setFeed] = useState('binanceus');
   const [timescale, setTimescale] = useState('daily');
 
-  // Data
   const [manifoldData, setManifoldData] = useState(null);
   const [pulseData, setPulseData] = useState(null);
   const [multiscaleData, setMultiscaleData] = useState(null);
 
-  // UI
   const [loading, setLoading] = useState(false);
-  const [view, setView] = useState('3d'); // '3d' | 'metrics' | 'multiscale'
+  const [view, setView] = useState('3d');
 
   const api = useManifoldAPI();
 
-  // -----------------------------
-  // Data loading
-  // -----------------------------
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadPulseData();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [symbol, feed]);
-
-  useEffect(() => {
-    setMultiscaleData(null);
-  }, [symbol, feed]);
-
-  useEffect(() => {
-    const interval = setInterval(loadPulseData, 30000);
-    return () => clearInterval(interval);
-  }, [symbol, feed]);
-
+  // Load manifold
   const loadManifoldData = async () => {
     setLoading(true);
     try {
@@ -69,16 +40,13 @@ const Dashboard = () => {
         },
       };
 
-      const interval = intervalMap[feed]?.[timescale] || '1d';
+      let interval = intervalMap[feed]?.[timescale];
+      if (!interval) interval = '1d';
 
-      const data = await api.analyzeSymbol(
-        symbol,
-        feed,
-        interval, // FIXED: ensure correct Binance interval
-        100,
-        timescale
-      );
+      console.log(`Fetching ${symbol} | feed=${feed} | interval=${interval} | timescale=${timescale}`);
 
+      const data = await api.analyzeSymbol(symbol, feed, interval, 100, timescale);
+      console.log('Fetched manifold data:', data);
       setManifoldData(data);
     } catch (err) {
       console.error('Failed to load manifold data:', err);
@@ -110,139 +78,56 @@ const Dashboard = () => {
     }
   };
 
-  // -----------------------------
-  // Render
-  // -----------------------------
+  useEffect(() => { loadPulseData(); }, [symbol, feed]);
+  useEffect(() => { setMultiscaleData(null); }, [symbol, feed]);
+  useEffect(() => { const interval = setInterval(loadPulseData, 30000); return () => clearInterval(interval); }, [symbol, feed]);
 
   return (
     <div className="dashboard">
       <header className="dashboard-header">
         <div className="header-content">
-          <h1 className="title">The Conductor's Manifold [v1.3 LIVE]</h1>
-          <p className="subtitle">
-            Real-Time Geometric Interpretation · Stocks (Alpha Vantage) · Crypto (Binance.US)
-          </p>
+          <h1>The Conductor's Manifold [v1.3 LIVE]</h1>
+          <p>Real-Time Geometric Interpretation · Stocks (Alpha Vantage) · Crypto (Binance.US)</p>
         </div>
       </header>
 
       <div className="controls-bar">
         <div className="control-group">
           <label>Symbol</label>
-          <input
-            type="text"
-            value={symbol}
-            onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-            className="input-field"
-          />
+          <input type="text" value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} />
         </div>
-
         <div className="control-group">
           <label>Data Feed</label>
-          <select
-            value={feed}
-            onChange={(e) => setFeed(e.target.value)}
-            className="select-field"
-          >
+          <select value={feed} onChange={(e) => setFeed(e.target.value)}>
             <option value="binanceus">Binance.US (Crypto)</option>
             <option value="alphavantage">Alpha Vantage (Stocks)</option>
           </select>
         </div>
-
         <div className="control-group">
           <label>Timescale</label>
           <TimeframeSelector current={timescale} onSelect={setTimescale} />
         </div>
 
-        <button
-          onClick={loadManifoldData}
-          className="btn-primary"
-          disabled={loading}
-        >
-          {loading ? 'Analyzing…' : 'Analyze'}
-        </button>
-
-        <button
-          onClick={loadMultiscaleData}
-          className="btn-secondary"
-          disabled={loading}
-        >
-          Multi-Scale
-        </button>
+        <button onClick={loadManifoldData} disabled={loading}>{loading ? 'Analyzing…' : 'Analyze'}</button>
+        <button onClick={loadMultiscaleData} disabled={loading}>Multi-Scale</button>
       </div>
 
       <div className="view-selector">
-        <button
-          className={`view-btn ${view === '3d' ? 'active' : ''}`}
-          onClick={() => setView('3d')}
-        >
-          3D Manifold
-        </button>
-        <button
-          className={`view-btn ${view === 'metrics' ? 'active' : ''}`}
-          onClick={() => setView('metrics')}
-        >
-          Metrics
-        </button>
-        <button
-          className={`view-btn ${view === 'multiscale' ? 'active' : ''}`}
-          onClick={() => setView('multiscale')}
-        >
-          Multi-Scale
-        </button>
+        <button className={view === '3d' ? 'active' : ''} onClick={() => setView('3d')}>3D Manifold</button>
+        <button className={view === 'metrics' ? 'active' : ''} onClick={() => setView('metrics')}>Metrics</button>
+        <button className={view === 'multiscale' ? 'active' : ''} onClick={() => setView('multiscale')}>Multi-Scale</button>
       </div>
 
       <div className="main-content">
-        {pulseData && (
-          <div className="pulse-sidebar">
-            <ManifoldPulse data={pulseData} />
-          </div>
-        )}
-
+        {pulseData && <ManifoldPulse data={pulseData} />}
         <div className="primary-view">
-          {loading && (
-            <div className="loading-overlay">
-              <div className="loading-spinner" />
-              <p>Analyzing the manifold…</p>
-            </div>
-          )}
-
-          {!loading && view === '3d' && manifoldData && (
-            <div className="view-container">
-              <ManifoldViewer3D
-                manifoldData={manifoldData}
-                width={1000}
-                height={700}
-              />
-            </div>
-          )}
-
-          {!loading && view === 'metrics' && manifoldData && (
-            <div className="view-container">
-              <MetricsPanel data={manifoldData} />
-            </div>
-          )}
-
-          {!loading && view === 'multiscale' && multiscaleData && (
-            <div className="view-container">
-              <MultiscaleView data={multiscaleData} />
-            </div>
-          )}
-
-          {!loading && view === '3d' && !manifoldData && (
-            <div className="empty-state">
-              <h2>Enter a symbol and press Analyze to begin</h2>
-              <p>Observe the market as a living geometric manifold</p>
-            </div>
-          )}
+          {loading && <p>Analyzing the manifold…</p>}
+          {!loading && view === '3d' && manifoldData && <ManifoldViewer3D manifoldData={manifoldData} width={1000} height={700} />}
+          {!loading && view === 'metrics' && manifoldData && <MetricsPanel data={manifoldData} />}
+          {!loading && view === 'multiscale' && multiscaleData && <MultiscaleView data={multiscaleData} />}
+          {!loading && view === '3d' && !manifoldData && <p>Enter a symbol and press Analyze to begin</p>}
         </div>
       </div>
-
-      <footer className="dashboard-footer">
-        <p>© 2025 Joshua Johosky. All Rights Reserved.</p>
-        <p className="disclaimer">
-          For authorized use only. See LICENSE.md for terms.
-        </p>
-      </footer>
     </div>
   );
 };
