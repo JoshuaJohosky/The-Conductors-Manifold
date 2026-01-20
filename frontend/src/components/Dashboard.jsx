@@ -14,68 +14,75 @@ import { useManifoldAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  // v1.3 - CRYPTO WORKING + MULTISCALE FIXED + 3D UPDATES
+  // Core state
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [feed, setFeed] = useState('binanceus');
   const [timescale, setTimescale] = useState('daily');
+
+  // Data
   const [manifoldData, setManifoldData] = useState(null);
   const [pulseData, setPulseData] = useState(null);
   const [multiscaleData, setMultiscaleData] = useState(null);
+
+  // UI
   const [loading, setLoading] = useState(false);
-  const [view, setView] = useState('3d'); // '3d', 'metrics', 'multiscale'
+  const [view, setView] = useState('3d'); // '3d' | 'metrics' | 'multiscale'
 
   const api = useManifoldAPI();
 
-  // Fetch initial data - debounced to avoid rate limiting
+  // -----------------------------
+  // Data loading
+  // -----------------------------
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadManifoldData();
       loadPulseData();
-    }, 800); // Wait 800ms after user stops typing
+    }, 500);
 
     return () => clearTimeout(timer);
-  }, [symbol, feed, timescale]);
+  }, [symbol, feed]);
 
-  // Clear multi-scale data when symbol or feed changes
   useEffect(() => {
     setMultiscaleData(null);
   }, [symbol, feed]);
 
-  // Auto-refresh pulse every 30 seconds (paused while typing)
   useEffect(() => {
-    // Only start auto-refresh after initial load (800ms debounce)
-    const startDelay = setTimeout(() => {
-      const interval = setInterval(loadPulseData, 30000);
-      return () => clearInterval(interval);
-    }, 1000);
-
-    return () => clearTimeout(startDelay);
+    const interval = setInterval(loadPulseData, 30000);
+    return () => clearInterval(interval);
   }, [symbol, feed]);
 
   const loadManifoldData = async () => {
     setLoading(true);
     try {
-      // Map timescale to correct interval format for each feed
       const intervalMap = {
-        'binanceus': {
-          'intraday': '1h',
-          'daily': '1d',
-          'weekly': '1w',
-          'monthly': '1M'
+        binanceus: {
+          intraday: '1h',
+          daily: '1d',
+          weekly: '1w',
+          monthly: '1M',
         },
-        'alphavantage': {
-          'intraday': '60min',
-          'daily': 'daily',
-          'weekly': 'weekly',
-          'monthly': 'monthly'
-        }
+        alphavantage: {
+          intraday: '60min',
+          daily: 'daily',
+          weekly: 'weekly',
+          monthly: 'monthly',
+        },
       };
 
       const interval = intervalMap[feed]?.[timescale] || '1d';
-      const data = await api.analyzeSymbol(symbol, feed, interval, 100, timescale);
+
+      const data = await api.analyzeSymbol(
+        symbol,
+        feed,
+        interval,
+        100,
+        timescale
+      );
+
       setManifoldData(data);
-    } catch (error) {
-      console.error('Failed to load manifold data:', error);
+    } catch (err) {
+      console.error('Failed to load manifold data:', err);
+      setManifoldData(null);
     } finally {
       setLoading(false);
     }
@@ -85,8 +92,8 @@ const Dashboard = () => {
     try {
       const data = await api.getManifoldPulse(symbol, feed);
       setPulseData(data);
-    } catch (error) {
-      console.error('Failed to load pulse data:', error);
+    } catch (err) {
+      console.error('Failed to load pulse data:', err);
     }
   };
 
@@ -95,24 +102,29 @@ const Dashboard = () => {
     try {
       const data = await api.analyzeMultiscale(symbol, feed);
       setMultiscaleData(data);
-    } catch (error) {
-      console.error('Failed to load multiscale data:', error);
+      setView('multiscale');
+    } catch (err) {
+      console.error('Failed to load multiscale data:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  // -----------------------------
+  // Render
+  // -----------------------------
+
   return (
     <div className="dashboard">
-      {/* Header */}
       <header className="dashboard-header">
         <div className="header-content">
           <h1 className="title">The Conductor's Manifold [v1.3 LIVE]</h1>
-          <p className="subtitle">Real-Time Geometric Interpretation · Stocks (Alpha Vantage) · Crypto (Binance.US)</p>
+          <p className="subtitle">
+            Real-Time Geometric Interpretation · Stocks (Alpha Vantage) · Crypto (Binance.US)
+          </p>
         </div>
       </header>
 
-      {/* Controls */}
       <div className="controls-bar">
         <div className="control-group">
           <label>Symbol</label>
@@ -120,7 +132,6 @@ const Dashboard = () => {
             type="text"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-            placeholder="BTCUSDT"
             className="input-field"
           />
         </div>
@@ -132,29 +143,33 @@ const Dashboard = () => {
             onChange={(e) => setFeed(e.target.value)}
             className="select-field"
           >
-            <option value="alphavantage">Alpha Vantage (US Stocks)</option>
-            <option value="binanceus">Binance.US (Crypto - Free, High Limits)</option>
+            <option value="binanceus">Binance.US (Crypto)</option>
+            <option value="alphavantage">Alpha Vantage (Stocks)</option>
           </select>
         </div>
 
         <div className="control-group">
           <label>Timescale</label>
-          <TimeframeSelector
-            current={timescale}
-            onSelect={setTimescale}
-          />
+          <TimeframeSelector current={timescale} onSelect={setTimescale} />
         </div>
 
-        <button onClick={loadManifoldData} className="btn-primary" disabled={loading}>
-          {loading ? 'Analyzing...' : 'Analyze'}
+        <button
+          onClick={loadManifoldData}
+          className="btn-primary"
+          disabled={loading}
+        >
+          {loading ? 'Analyzing…' : 'Analyze'}
         </button>
 
-        <button onClick={loadMultiscaleData} className="btn-secondary">
+        <button
+          onClick={loadMultiscaleData}
+          className="btn-secondary"
+          disabled={loading}
+        >
           Multi-Scale
         </button>
       </div>
 
-      {/* View Selector */}
       <div className="view-selector">
         <button
           className={`view-btn ${view === '3d' ? 'active' : ''}`}
@@ -176,34 +191,30 @@ const Dashboard = () => {
         </button>
       </div>
 
-      {/* Main Content */}
       <div className="main-content">
-        {/* Pulse Monitor (Always Visible) */}
         {pulseData && (
           <div className="pulse-sidebar">
             <ManifoldPulse data={pulseData} />
           </div>
         )}
 
-        {/* Primary View */}
         <div className="primary-view">
           {loading && (
             <div className="loading-overlay">
-              <div className="loading-spinner"></div>
-              <p>Analyzing the manifold...</p>
+              <div className="loading-spinner" />
+              <p>Analyzing the manifold…</p>
             </div>
           )}
 
-      {!loading && view === '3d' && !manifoldData && (
-  <div className="empty-state">
-
-    <ManifoldViewer3D
-      manifoldData={manifoldData}
-      width={1000}
-      height={700}
-    />
-  </div>
-)}
+          {!loading && view === '3d' && manifoldData && (
+            <div className="view-container">
+              <ManifoldViewer3D
+                manifoldData={manifoldData}
+                width={1000}
+                height={700}
+              />
+            </div>
+          )}
 
           {!loading && view === 'metrics' && manifoldData && (
             <div className="view-container">
@@ -217,7 +228,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {!loading && !manifoldData && (
+          {!loading && view === '3d' && !manifoldData && (
             <div className="empty-state">
               <h2>Enter a symbol and press Analyze to begin</h2>
               <p>Observe the market as a living geometric manifold</p>
@@ -226,10 +237,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="dashboard-footer">
         <p>© 2025 Joshua Johosky. All Rights Reserved.</p>
-        <p className="disclaimer">For authorized use only. See LICENSE.md for terms.</p>
+        <p className="disclaimer">
+          For authorized use only. See LICENSE.md for terms.
+        </p>
       </footer>
     </div>
   );
