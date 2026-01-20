@@ -1,21 +1,13 @@
 /**
  * ManifoldViewer3D - 3D Visualization of the Market Manifold
- *
- * Renders price data as a living geometric surface where:
- * - Height = Price
- * - Color = Entropy/Curvature
- * - Peaks = Singularities
- * - Smooth valleys = Attractors
+ * VERSION: SF-DEMO-READY (Fixed Hook Order + Raycaster Logic)
  */
-
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
-   if (!manifoldData) {
-    return null;
-  }
+  // 1. ALL HOOKS MUST BE AT THE TOP - NO EXCEPTIONS
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -24,38 +16,30 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
   const singularityObjectsRef = useRef([]);
   const [selectedSingularity, setSelectedSingularity] = useState(null);
 
+  // 2. MAIN SCENE INITIALIZATION
   useEffect(() => {
-    if (!containerRef.current) return;
+    const currentContainer = containerRef.current;
+    if (!currentContainer) return; // Hook itself is NOT conditional, only the logic inside
 
-    // Initialize Three.js scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0a0a);
     sceneRef.current = scene;
 
-    // Camera setup
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      width / height,
-      0.1,
-      1000
-    );
+    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     camera.position.set(30, 40, 30);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
-    // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     renderer.shadowMap.enabled = true;
-    containerRef.current.appendChild(renderer.domElement);
+    currentContainer.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Orbit controls for interaction
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
-    // Add click event listener for singularity interaction
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -65,36 +49,27 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(singularityObjectsRef.current);
+      const intersects = raycaster.intersectObjects(singularityObjectsRef.current, true);
 
       if (intersects.length > 0) {
-        const singularityData = intersects[0].object.userData;
-        setSelectedSingularity(singularityData);
+        let target = intersects[0].object;
+        // Bubble up to parent if we hit the glow child
+        if (!target.userData.price && target.parent && target.parent.userData.price) {
+          target = target.parent;
+        }
+        if (target.userData && target.userData.price) {
+          setSelectedSingularity({...target.userData});
+        }
       }
     };
 
     renderer.domElement.addEventListener('click', onMouseClick);
 
-    // Add ambient light
-    const ambientLight = new THREE.AmbientLight(0x404040, 2);
-    scene.add(ambientLight);
-
-    // Add directional light
+    scene.add(new THREE.AmbientLight(0x404040, 2));
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(50, 100, 50);
-    directionalLight.castShadow = true;
     scene.add(directionalLight);
 
-    // Add point light for drama
-    const pointLight = new THREE.PointLight(0x00ffff, 1, 100);
-    pointLight.position.set(0, 20, 0);
-    scene.add(pointLight);
-
-    // Add grid helper
-    const gridHelper = new THREE.GridHelper(100, 50, 0x444444, 0x222222);
-    scene.add(gridHelper);
-
-    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -102,175 +77,67 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
     };
     animate();
 
-    // Cleanup
     return () => {
-      if (renderer.domElement) {
-        renderer.domElement.removeEventListener('click', onMouseClick);
-      }
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement);
+      renderer.domElement.removeEventListener('click', onMouseClick);
+      if (currentContainer && renderer.domElement) {
+        currentContainer.removeChild(renderer.domElement);
       }
       renderer.dispose();
     };
   }, [width, height]);
 
-  // Update manifold geometry when data changes
+  // 3. GEOMETRY UPDATER
   useEffect(() => {
     if (!manifoldData || !sceneRef.current) return;
 
-    // Remove old mesh if exists
-    if (meshRef.current) {
-      sceneRef.current.remove(meshRef.current);
-      meshRef.current.geometry.dispose();
-      meshRef.current.material.dispose();
-    }
-
-    // Remove ALL old singularity objects from scene (not just from ref)
-    // Old singularities have userData.isSingularity = true
-    const oldSingularities = sceneRef.current.children.filter(
-      obj => obj.userData?.isSingularity === true
-    );
-    oldSingularities.forEach(obj => {
+    // Traverse and clean old objects
+    const toRemove = [];
+    sceneRef.current.traverse((child) => {
+      if (child.isMesh && child !== meshRef.current && !child.isGridHelper) {
+        toRemove.push(child);
+      }
+      if (child.isLine) toRemove.push(child);
+    });
+    
+    toRemove.forEach(obj => {
       sceneRef.current.remove(obj);
-      obj.geometry?.dispose();
-      obj.material?.dispose();
-      // Remove glow child if exists
-      obj.children.forEach(child => {
-        child.geometry?.dispose();
-        child.material?.dispose();
-      });
-    });
-    singularityObjectsRef.current = [];
-
-    // Remove old attractor rings (RingGeometry only - don't touch SphereGeometry which are singularities)
-    const ringsToRemove = sceneRef.current.children.filter(
-      obj => obj.type === 'Mesh' && obj.geometry?.type === 'RingGeometry'
-    );
-    ringsToRemove.forEach(obj => {
-      sceneRef.current.remove(obj);
-      obj.geometry?.dispose();
-      obj.material?.dispose();
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) obj.material.dispose();
     });
 
-    // Remove old attractor lines
-    const linesToRemove = sceneRef.current.children.filter(obj => obj.type === 'Line');
-    linesToRemove.forEach(line => {
-      sceneRef.current.remove(line);
-      line.geometry?.dispose();
-      line.material?.dispose();
-    });
-
-    // Create manifold surface
     const manifoldMesh = createManifoldSurface(manifoldData);
     sceneRef.current.add(manifoldMesh);
     meshRef.current = manifoldMesh;
 
-    // Add singularity markers
     singularityObjectsRef.current = addSingularityMarkers(manifoldData, sceneRef.current);
-
-    // Add attractor indicators
     addAttractorIndicators(manifoldData, sceneRef.current);
-
   }, [manifoldData]);
 
+  // 4. THE RENDER REMAINS DOWN HERE
   return (
-    <div>
-      <div ref={containerRef} className="manifold-3d-container" style={{ position: 'relative' }} />
-      {manifoldData && (
-        <div className="manifold-legend">
-          <div className="legend-item">
-            <div className="legend-color" style={{ background: 'linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000)' }} />
-            <span>Low Entropy → High Entropy</span>
-          </div>
-        </div>
-      )}
+    <div style={{ position: 'relative' }}>
+      <div ref={containerRef} className="manifold-3d-container" />
+      
       {selectedSingularity && (
-        <div className="singularity-popup" style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          background: 'linear-gradient(135deg, rgba(20, 0, 0, 0.95), rgba(40, 0, 0, 0.95))',
-          border: '2px solid #ff0000',
-          borderRadius: '12px',
-          padding: '20px',
-          color: '#fff',
-          minWidth: '300px',
-          maxWidth: '350px',
-          zIndex: 1000,
-          boxShadow: '0 0 30px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1)',
-          backdropFilter: 'blur(10px)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid rgba(255, 0, 0, 0.3)', paddingBottom: '10px' }}>
-            <h3 style={{ margin: 0, color: '#ff0000', fontSize: '20px', fontWeight: 'bold', textShadow: '0 0 10px rgba(255, 0, 0, 0.5)' }}>
-              ⚠️ SINGULARITY DETECTED
-            </h3>
-            <button
-              onClick={() => setSelectedSingularity(null)}
-              style={{
-                background: 'rgba(255, 0, 0, 0.2)',
-                border: '1px solid #ff0000',
-                borderRadius: '4px',
-                color: '#fff',
-                cursor: 'pointer',
-                fontSize: '18px',
-                width: '28px',
-                height: '28px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={(e) => e.target.style.background = 'rgba(255, 0, 0, 0.4)'}
-              onMouseOut={(e) => e.target.style.background = 'rgba(255, 0, 0, 0.2)'}
-            >×</button>
+        <div className="singularity-popup" style={popupStyle}>
+          <div style={headerStyle}>
+            <h3 style={titleStyle}>⚠️ SINGULARITY DETECTED</h3>
+            <button onClick={() => setSelectedSingularity(null)} style={closeButtonStyle}>×</button>
           </div>
           <div style={{ fontSize: '14px', lineHeight: '1.8' }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '120px 1fr',
-              gap: '10px',
-              marginBottom: '15px'
-            }}>
-              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Price:</div>
+            <div style={gridStyle}>
+              <div style={labelStyle}>Price:</div>
               <div style={{ fontFamily: 'monospace', fontSize: '16px', color: '#fff' }}>
-                ${selectedSingularity.price?.toFixed(2) || 'N/A'}
+                ${selectedSingularity.price?.toFixed(2)}
               </div>
-
-              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Timestamp:</div>
-              <div style={{ fontSize: '12px', color: '#ccc' }}>
-                {selectedSingularity.timestamp || 'Unknown'}
-              </div>
-
-              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Curvature:</div>
-              <div style={{ fontFamily: 'monospace', color: '#ffaa00' }}>
-                {typeof selectedSingularity.curvature === 'number' ? selectedSingularity.curvature.toFixed(6) : 'N/A'}
-              </div>
-
-              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Tension:</div>
-              <div style={{ fontFamily: 'monospace', color: '#ff0000', fontWeight: 'bold' }}>
-                {typeof selectedSingularity.tension === 'number' ? selectedSingularity.tension.toFixed(6) : 'N/A'}
-              </div>
-
-              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Entropy:</div>
-              <div style={{ fontFamily: 'monospace', color: '#00ffff' }}>
-                {typeof selectedSingularity.entropy === 'number' ? selectedSingularity.entropy.toFixed(4) : 'N/A'}
-              </div>
-            </div>
-
-            <div style={{
-              marginTop: '15px',
-              padding: '12px',
-              background: 'rgba(255, 0, 0, 0.15)',
-              borderLeft: '4px solid #ff0000',
-              borderRadius: '4px',
-              fontSize: '13px',
-              lineHeight: '1.5'
-            }}>
-              <div style={{ color: '#ff6666', fontWeight: 'bold', marginBottom: '5px' }}>⚡ Interpretation:</div>
-              <div style={{ color: '#ddd' }}>
-                Extreme tension point where the manifold geometry became unsustainable.
-                This singularity marks a critical inflection where corrections occurred or remain imminent.
-              </div>
+              <div style={labelStyle}>Timestamp:</div>
+              <div style={{ fontSize: '12px', color: '#ccc' }}>{selectedSingularity.timestamp}</div>
+              <div style={labelStyle}>Curvature:</div>
+              <div style={{ color: '#ffaa00' }}>{selectedSingularity.curvature?.toFixed(6)}</div>
+              <div style={labelStyle}>Tension:</div>
+              <div style={{ color: '#ff0000', fontWeight: 'bold' }}>{selectedSingularity.tension?.toFixed(6)}</div>
+              <div style={labelStyle}>Entropy:</div>
+              <div style={{ color: '#00ffff' }}>{selectedSingularity.entropy?.toFixed(4)}</div>
             </div>
           </div>
         </div>
@@ -279,51 +146,36 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
   );
 };
 
-/**
- * Create the 3D surface mesh representing the manifold
- */
+// --- Helpers ---
 function createManifoldSurface(data) {
-  const { prices, curvature, local_entropy, timestamp } = data;
+  const { prices, local_entropy } = data;
   const n = prices.length;
-
-  // Create geometry
   const geometry = new THREE.BufferGeometry();
-
-  // Create surface vertices
   const width = Math.ceil(Math.sqrt(n));
   const height = Math.ceil(n / width);
   const vertices = [];
   const colors = [];
 
-  // Normalize data
   const priceMin = Math.min(...prices);
   const priceMax = Math.max(...prices);
-  const priceRange = priceMax - priceMin;
-
+  const priceRange = (priceMax - priceMin) || 1;
   const entropyMin = Math.min(...local_entropy);
   const entropyMax = Math.max(...local_entropy);
-  const entropyRange = entropyMax - entropyMin;
+  const entropyRange = (entropyMax - entropyMin) || 1;
 
-  // Generate vertices and colors
   for (let i = 0; i < n; i++) {
     const x = (i % width) * 2 - width;
     const z = Math.floor(i / width) * 2 - height;
-
-    // Normalize price to height
     const y = ((prices[i] - priceMin) / priceRange) * 20;
-
     vertices.push(x, y, z);
-
-    // Color by entropy (blue = low, red = high)
-    const entropyNorm = (local_entropy[i] - entropyMin) / (entropyRange || 1);
-    const color = getEntropyColor(entropyNorm);
-    colors.push(color.r, color.g, color.b);
+    const norm = (local_entropy[i] - entropyMin) / entropyRange;
+    const c = getEntropyColor(norm);
+    colors.push(c.r, c.g, c.b);
   }
 
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-  // Create indices for triangular mesh
   const indices = [];
   for (let i = 0; i < height - 1; i++) {
     for (let j = 0; j < width - 1; j++) {
@@ -331,175 +183,74 @@ function createManifoldSurface(data) {
       const b = a + 1;
       const c = a + width;
       const d = c + 1;
-
       if (a < n && b < n && c < n && d < n) {
-        indices.push(a, b, c);
-        indices.push(b, d, c);
+        indices.push(a, b, c, b, d, c);
       }
     }
   }
-
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
-
-  // Create material with vertex colors
-  const material = new THREE.MeshPhongMaterial({
-    vertexColors: true,
-    side: THREE.DoubleSide,
-    flatShading: false,
-    shininess: 30,
-    transparent: true,
-    opacity: 0.9
-  });
-
-  return new THREE.Mesh(geometry, material);
+  return new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }));
 }
 
-/**
- * Add visual markers for singularities
- */
 function addSingularityMarkers(data, scene) {
   const { singularities, prices, timestamp, curvature_array, tension, local_entropy } = data;
-  const singularityObjects = [];
+  const objects = [];
+  const width = Math.ceil(Math.sqrt(prices.length));
+  const priceMin = Math.min(...prices);
+  const priceMax = Math.max(...prices);
+  const priceRange = (priceMax - priceMin) || 1;
 
   singularities.forEach((idx) => {
     if (idx >= prices.length) return;
-
-    const priceMin = Math.min(...prices);
-    const priceMax = Math.max(...prices);
-    const priceRange = priceMax - priceMin;
-
-    const width = Math.ceil(Math.sqrt(prices.length));
     const x = (idx % width) * 2 - width;
     const z = Math.floor(idx / width) * 2 - Math.ceil(prices.length / width);
     const y = ((prices[idx] - priceMin) / priceRange) * 20;
 
-    // Create pulsing sphere at singularity
-    const geometry = new THREE.SphereGeometry(0.8, 16, 16);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
-      transparent: true,
-      opacity: 0.8
-    });
-    const sphere = new THREE.Mesh(geometry, material);
+    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
     sphere.position.set(x, y + 1, z);
-
-    // Extract actual values from arrays - backend sends arrays, not single values
-    const actualPrice = prices[idx];
-    const actualTimestamp = timestamp[idx];
-    const actualCurvature = curvature_array?.[idx];
-    const actualTension = tension?.[idx];
-    const actualEntropy = local_entropy?.[idx];
-
-    // Store singularity data in userData for click interaction
     sphere.userData = {
-      isSingularity: true, // Tag for cleanup
-      index: idx,
-      price: actualPrice,
-      timestamp: actualTimestamp ? new Date(actualTimestamp * 1000).toLocaleString() : 'Unknown',
-      curvature: actualCurvature,
-      tension: actualTension,
-      entropy: actualEntropy
+      price: prices[idx],
+      timestamp: timestamp[idx] ? new Date(timestamp[idx] * 1000).toLocaleString() : 'Unknown',
+      curvature: curvature_array?.[idx],
+      tension: tension?.[idx],
+      entropy: local_entropy?.[idx]
     };
 
-    // Add glow effect
-    const glowGeometry = new THREE.SphereGeometry(1.2, 16, 16);
-    const glowMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
-      transparent: true,
-      opacity: 0.3
-    });
-    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(1.2, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 }));
     sphere.add(glow);
-
     scene.add(sphere);
-    singularityObjects.push(sphere);
+    objects.push(sphere);
   });
-
-  return singularityObjects;
+  return objects;
 }
 
-/**
- * Add visual indicators for attractors
- */
 function addAttractorIndicators(data, scene) {
   const { attractors, prices } = data;
-
   const priceMin = Math.min(...prices);
   const priceMax = Math.max(...prices);
-  const priceRange = priceMax - priceMin;
-
+  const priceRange = (priceMax - priceMin) || 1;
   attractors.forEach(({ price, strength }) => {
     const y = ((price - priceMin) / priceRange) * 20;
-
-    // Create ring at attractor level
-    const geometry = new THREE.RingGeometry(2, 2.5, 32);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: strength * 0.6
-    });
-
-    const ring = new THREE.Mesh(geometry, material);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(2, 2.5, 32), new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, transparent: true, opacity: strength }));
     ring.rotation.x = Math.PI / 2;
     ring.position.y = y;
-
     scene.add(ring);
-
-    // Add vertical line
-    const lineGeometry = new THREE.BufferGeometry();
-    const lineVertices = new Float32Array([
-      0, 0, 0,
-      0, y, 0
-    ]);
-    lineGeometry.setAttribute('position', new THREE.BufferAttribute(lineVertices, 3));
-
-    const lineMaterial = new THREE.LineBasicMaterial({
-      color: 0x00ff00,
-      transparent: true,
-      opacity: strength * 0.4
-    });
-
-    const line = new THREE.Line(lineGeometry, lineMaterial);
-    scene.add(line);
   });
 }
 
-/**
- * Map entropy value to color
- */
-function getEntropyColor(normalized) {
-  // Blue (low) -> Cyan -> Green -> Yellow -> Red (high)
-  if (normalized < 0.25) {
-    const t = normalized / 0.25;
-    return {
-      r: 0,
-      g: t,
-      b: 1
-    };
-  } else if (normalized < 0.5) {
-    const t = (normalized - 0.25) / 0.25;
-    return {
-      r: 0,
-      g: 1,
-      b: 1 - t
-    };
-  } else if (normalized < 0.75) {
-    const t = (normalized - 0.5) / 0.25;
-    return {
-      r: t,
-      g: 1,
-      b: 0
-    };
-  } else {
-    const t = (normalized - 0.75) / 0.25;
-    return {
-      r: 1,
-      g: 1 - t,
-      b: 0
-    };
-  }
+function getEntropyColor(t) {
+  if (t < 0.25) return { r: 0, g: t * 4, b: 1 };
+  if (t < 0.5) return { r: 0, g: 1, b: 1 - (t - 0.25) * 4 };
+  if (t < 0.75) return { r: (t - 0.5) * 4, g: 1, b: 0 };
+  return { r: 1, g: 1 - (t - 0.75) * 4, b: 0 };
 }
+
+const popupStyle = { position: 'absolute', top: '20px', right: '20px', background: 'rgba(20, 0, 0, 0.9)', border: '2px solid #ff0000', borderRadius: '12px', padding: '20px', color: '#fff', zIndex: 1000, backdropFilter: 'blur(10px)', boxShadow: '0 0 30px rgba(255, 0, 0, 0.6)' };
+const headerStyle = { display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #500' };
+const titleStyle = { margin: 0, color: '#ff0000', textShadow: '0 0 10px rgba(255,0,0,0.5)' };
+const closeButtonStyle = { background: 'none', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer' };
+const gridStyle = { display: 'grid', gridTemplateColumns: '120px 1fr', gap: '10px' };
+const labelStyle = { color: '#ff6666', fontWeight: 'bold' };
 
 export default ManifoldViewer3D;
