@@ -17,6 +17,9 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
   const meshRef = useRef(null);
+  const cameraRef = useRef(null);
+  const singularityObjectsRef = useRef([]);
+  const [selectedSingularity, setSelectedSingularity] = useState(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -35,6 +38,7 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
     );
     camera.position.set(30, 40, 30);
     camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -47,6 +51,26 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+
+    // Add click event listener for singularity interaction
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const onMouseClick = (event) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(singularityObjectsRef.current);
+
+      if (intersects.length > 0) {
+        const singularityData = intersects[0].object.userData;
+        setSelectedSingularity(singularityData);
+      }
+    };
+
+    renderer.domElement.addEventListener('click', onMouseClick);
 
     // Add ambient light
     const ambientLight = new THREE.AmbientLight(0x404040, 2);
@@ -77,6 +101,9 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
 
     // Cleanup
     return () => {
+      if (renderer.domElement) {
+        renderer.domElement.removeEventListener('click', onMouseClick);
+      }
       if (containerRef.current && renderer.domElement) {
         containerRef.current.removeChild(renderer.domElement);
       }
@@ -95,13 +122,48 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
       meshRef.current.material.dispose();
     }
 
+    // Remove ALL old singularity objects from scene (not just from ref)
+    // Old singularities have userData.isSingularity = true
+    const oldSingularities = sceneRef.current.children.filter(
+      obj => obj.userData?.isSingularity === true
+    );
+    oldSingularities.forEach(obj => {
+      sceneRef.current.remove(obj);
+      obj.geometry?.dispose();
+      obj.material?.dispose();
+      // Remove glow child if exists
+      obj.children.forEach(child => {
+        child.geometry?.dispose();
+        child.material?.dispose();
+      });
+    });
+    singularityObjectsRef.current = [];
+
+    // Remove old attractor rings (RingGeometry only - don't touch SphereGeometry which are singularities)
+    const ringsToRemove = sceneRef.current.children.filter(
+      obj => obj.type === 'Mesh' && obj.geometry?.type === 'RingGeometry'
+    );
+    ringsToRemove.forEach(obj => {
+      sceneRef.current.remove(obj);
+      obj.geometry?.dispose();
+      obj.material?.dispose();
+    });
+
+    // Remove old attractor lines
+    const linesToRemove = sceneRef.current.children.filter(obj => obj.type === 'Line');
+    linesToRemove.forEach(line => {
+      sceneRef.current.remove(line);
+      line.geometry?.dispose();
+      line.material?.dispose();
+    });
+
     // Create manifold surface
     const manifoldMesh = createManifoldSurface(manifoldData);
     sceneRef.current.add(manifoldMesh);
     meshRef.current = manifoldMesh;
 
     // Add singularity markers
-    addSingularityMarkers(manifoldData, sceneRef.current);
+    singularityObjectsRef.current = addSingularityMarkers(manifoldData, sceneRef.current);
 
     // Add attractor indicators
     addAttractorIndicators(manifoldData, sceneRef.current);
@@ -110,12 +172,103 @@ const ManifoldViewer3D = ({ manifoldData, width = 800, height = 600 }) => {
 
   return (
     <div>
-      <div ref={containerRef} className="manifold-3d-container" />
+      <div ref={containerRef} className="manifold-3d-container" style={{ position: 'relative' }} />
       {manifoldData && (
         <div className="manifold-legend">
           <div className="legend-item">
             <div className="legend-color" style={{ background: 'linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000)' }} />
             <span>Low Entropy → High Entropy</span>
+          </div>
+        </div>
+      )}
+      {selectedSingularity && (
+        <div className="singularity-popup" style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          background: 'linear-gradient(135deg, rgba(20, 0, 0, 0.95), rgba(40, 0, 0, 0.95))',
+          border: '2px solid #ff0000',
+          borderRadius: '12px',
+          padding: '20px',
+          color: '#fff',
+          minWidth: '300px',
+          maxWidth: '350px',
+          zIndex: 1000,
+          boxShadow: '0 0 30px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1)',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid rgba(255, 0, 0, 0.3)', paddingBottom: '10px' }}>
+            <h3 style={{ margin: 0, color: '#ff0000', fontSize: '20px', fontWeight: 'bold', textShadow: '0 0 10px rgba(255, 0, 0, 0.5)' }}>
+              ⚠️ SINGULARITY DETECTED
+            </h3>
+            <button
+              onClick={() => setSelectedSingularity(null)}
+              style={{
+                background: 'rgba(255, 0, 0, 0.2)',
+                border: '1px solid #ff0000',
+                borderRadius: '4px',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '18px',
+                width: '28px',
+                height: '28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.background = 'rgba(255, 0, 0, 0.4)'}
+              onMouseOut={(e) => e.target.style.background = 'rgba(255, 0, 0, 0.2)'}
+            >×</button>
+          </div>
+          <div style={{ fontSize: '14px', lineHeight: '1.8' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '120px 1fr',
+              gap: '10px',
+              marginBottom: '15px'
+            }}>
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Price:</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '16px', color: '#fff' }}>
+                ${selectedSingularity.price?.toFixed(2) || 'N/A'}
+              </div>
+
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Timestamp:</div>
+              <div style={{ fontSize: '12px', color: '#ccc' }}>
+                {selectedSingularity.timestamp || 'Unknown'}
+              </div>
+
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Curvature:</div>
+              <div style={{ fontFamily: 'monospace', color: '#ffaa00' }}>
+                {typeof selectedSingularity.curvature === 'number' ? selectedSingularity.curvature.toFixed(6) : 'N/A'}
+              </div>
+
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Tension:</div>
+              <div style={{ fontFamily: 'monospace', color: '#ff0000', fontWeight: 'bold' }}>
+                {typeof selectedSingularity.tension === 'number' ? selectedSingularity.tension.toFixed(6) : 'N/A'}
+              </div>
+
+              <div style={{ color: '#ff6666', fontWeight: 'bold' }}>Entropy:</div>
+              <div style={{ fontFamily: 'monospace', color: '#00ffff' }}>
+                {typeof selectedSingularity.entropy === 'number' ? selectedSingularity.entropy.toFixed(4) : 'N/A'}
+              </div>
+            </div>
+
+            <div style={{
+              marginTop: '15px',
+              padding: '12px',
+              background: 'rgba(255, 0, 0, 0.15)',
+              borderLeft: '4px solid #ff0000',
+              borderRadius: '4px',
+              fontSize: '13px',
+              lineHeight: '1.5'
+            }}>
+              <div style={{ color: '#ff6666', fontWeight: 'bold', marginBottom: '5px' }}>⚡ Interpretation:</div>
+              <div style={{ color: '#ddd' }}>
+                Extreme tension point where the manifold geometry became unsustainable.
+                This singularity marks a critical inflection where corrections occurred or remain imminent.
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -203,7 +356,8 @@ function createManifoldSurface(data) {
  * Add visual markers for singularities
  */
 function addSingularityMarkers(data, scene) {
-  const { singularities, prices, timestamp } = data;
+  const { singularities, prices, timestamp, curvature_array, tension, local_entropy } = data;
+  const singularityObjects = [];
 
   singularities.forEach((idx) => {
     if (idx >= prices.length) return;
@@ -227,6 +381,24 @@ function addSingularityMarkers(data, scene) {
     const sphere = new THREE.Mesh(geometry, material);
     sphere.position.set(x, y + 1, z);
 
+    // Extract actual values from arrays - backend sends arrays, not single values
+    const actualPrice = prices[idx];
+    const actualTimestamp = timestamp[idx];
+    const actualCurvature = curvature_array?.[idx];
+    const actualTension = tension?.[idx];
+    const actualEntropy = local_entropy?.[idx];
+
+    // Store singularity data in userData for click interaction
+    sphere.userData = {
+      isSingularity: true, // Tag for cleanup
+      index: idx,
+      price: actualPrice,
+      timestamp: actualTimestamp ? new Date(actualTimestamp * 1000).toLocaleString() : 'Unknown',
+      curvature: actualCurvature,
+      tension: actualTension,
+      entropy: actualEntropy
+    };
+
     // Add glow effect
     const glowGeometry = new THREE.SphereGeometry(1.2, 16, 16);
     const glowMaterial = new THREE.MeshBasicMaterial({
@@ -238,7 +410,10 @@ function addSingularityMarkers(data, scene) {
     sphere.add(glow);
 
     scene.add(sphere);
+    singularityObjects.push(sphere);
   });
+
+  return singularityObjects;
 }
 
 /**
