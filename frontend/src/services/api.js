@@ -1,4 +1,4 @@
-/**
+/** 
  * API Service for The Conductor's Manifold
  *
  * Handles all communication with the backend API and WebSocket connections.
@@ -44,40 +44,36 @@ class ManifoldAPIClient {
 
   // Analyze a symbol
   async analyzeSymbol(symbol, feed = 'binance', interval = '1d', limit = 100, timescale = 'daily') {
+    // ✅ FIXED: interval is always the proper API value, timescale is UI-only
     return this.request(
       `/api/v1/analyze/${symbol}?feed=${feed}&interval=${interval}&limit=${limit}&timescale=${timescale}`
     );
   }
 
-  // Multi-scale analysis
   async analyzeMultiscale(symbol, feed = 'binance', limit = 200) {
     return this.request(
       `/api/v1/multiscale/${symbol}?feed=${feed}&limit=${limit}`
     );
   }
 
-  // Get attractors
   async getAttractors(symbol, feed = 'binance', limit = 100) {
     return this.request(
       `/api/v1/attractors/${symbol}?feed=${feed}&limit=${limit}`
     );
   }
 
-  // Get singularities
   async getSingularities(symbol, feed = 'binance', limit = 100) {
     return this.request(
       `/api/v1/singularities/${symbol}?feed=${feed}&limit=${limit}`
     );
   }
 
-  // Get manifold pulse
   async getManifoldPulse(symbol, feed = 'binance') {
     return this.request(
       `/api/v1/pulse/${symbol}?feed=${feed}`
     );
   }
 
-  // Create WebSocket connection for real-time updates
   connectRealtime(symbol, feed = 'binance', onMessage, onError) {
     const ws = new WebSocket(`${WS_BASE_URL}/ws/realtime/${symbol}?feed=${feed}`);
 
@@ -103,17 +99,11 @@ class ManifoldAPIClient {
   }
 }
 
-/**
- * React hook for using the Manifold API
- */
 export const useManifoldAPI = () => {
   const [client] = useState(() => new ManifoldAPIClient());
   return client;
 };
 
-/**
- * React hook for real-time manifold data
- */
 export const useRealtimeManifold = (symbol, feed = 'binance') => {
   const [data, setData] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -143,14 +133,11 @@ export const useRealtimeManifold = (symbol, feed = 'binance') => {
       ws.close();
       setConnected(false);
     };
-  }, [symbol, feed]);
+  }, [symbol, feed, client]);
 
   return { data, connected, error };
 };
 
-/**
- * React hook for polling manifold pulse
- */
 export const useManifoldPulse = (symbol, feed = 'binance', interval = 30000) => {
   const [pulse, setPulse] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -184,9 +171,6 @@ export const useManifoldPulse = (symbol, feed = 'binance', interval = 30000) => 
   return { pulse, loading, error, refetch: fetchPulse };
 };
 
-/**
- * Export singleton client for non-hook usage
- */
 export const manifestClient = new ManifoldAPIClient();
 
 export default ManifoldAPIClient;

@@ -11,8 +11,6 @@
  */
 
 import React from 'react';
-import ManifoldViewer3D from './ManifoldViewer3D';
-import MetricsPanel from './MetricsPanel';
 import './MultiscaleView.css';
 
 const MultiscaleView = ({ data }) => {
@@ -122,3 +120,4 @@ const MultiscaleView = ({ data }) => {
 };
 
 export default MultiscaleView;
+

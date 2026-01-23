@@ -15,8 +15,8 @@ import './Dashboard.css';
 
 const Dashboard = () => {
   // v1.3 - CRYPTO WORKING + MULTISCALE FIXED + 3D UPDATES
-  const [symbol, setSymbol] = useState('BTCUSDT');
-  const [feed, setFeed] = useState('binanceus');
+  const [symbol, setSymbol] = useState('AAPL');
+  const [feed, setFeed] = useState('alphavantage');
   const [timescale, setTimescale] = useState('daily');
   const [manifoldData, setManifoldData] = useState(null);
   const [pulseData, setPulseData] = useState(null);
