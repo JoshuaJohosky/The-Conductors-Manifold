@@ -32,14 +32,18 @@ from backend.services.data_ingestion import (
     CoinGeckoDataFeed,
     MarketData
 )
+from backend.api.mobile_api import router as mobile_router
 
 
 # Initialize FastAPI app
 app = FastAPI(
     title="The Conductor's Manifold API",
     description="Real-time geometric analysis of complex systems",
-    version="1.0.0"
+    version="2.0.0"
 )
+
+# Include mobile API router
+app.include_router(mobile_router)
 
 # Configure CORS
 app.add_middleware(
