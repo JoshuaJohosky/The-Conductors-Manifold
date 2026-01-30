@@ -1,0 +1,42 @@
+version: '3.8'
+
+# Docker Compose for Mobile Development
+# Extends the base docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.mobile.yml up
+
+services:
+  # Backend with mobile API enabled
+  backend:
+    environment:
+      - MOBILE_API_SECRET=${MOBILE_API_SECRET:-mobile_dev_secret_change_in_prod}
+      - DEMO_API_KEY=${DEMO_API_KEY:-demo_mobile_key}
+    # Expose additional port for mobile debugging if needed
+    ports:
+      - "8000:8000"
+
+  # Expo development server for mobile
+  mobile:
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"   # Expo Metro bundler
+      - "19000:19000" # Expo DevTools
+      - "19001:19001" # Expo packager info
+      - "19002:19002" # Expo DevTools GUI
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - REACT_NATIVE_PACKAGER_HOSTNAME=${HOST_IP:-localhost}
+      - API_URL=http://backend:8000
+    volumes:
+      - ./mobile:/app
+      - /app/node_modules
+    command: npx expo start --tunnel
+    depends_on:
+      - backend
+    networks:
+      - manifold-network
+
+networks:
+  manifold-network:
+    driver: bridge
